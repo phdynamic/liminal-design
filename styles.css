@@ -122,15 +122,15 @@ p{margin:0}
 .section-head p{margin-top:1rem;color:var(--muted);font-size:1.125rem}
 
 /* Work: each sample is a door. Lit = open now. Dark = on the way. */
-.features{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.25rem;margin-top:3.25rem}
+.features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem;margin-top:3.25rem}
 .feature{position:relative;display:flex;flex-direction:column;border-radius:2px}
 .feature img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:2px 2px 0 0}
 .feature-text{flex:1;display:flex;flex-direction:column;padding:1.4rem 1.5rem 1.6rem}
 .feature .tool{font-size:.9375rem;font-weight:500}
-.feature h3{margin-top:1.1rem;font-size:clamp(1.7rem,2.4vw,2rem)}
+.feature h3{margin-top:1.1rem;font-size:clamp(1.9rem,3vw,2.3rem)}
 .feature .about{margin-top:.75rem;font-size:1.0625rem;line-height:1.5}
 .feature .state{margin-top:auto;padding-top:1.1rem;font-size:1rem;font-weight:600}
-.doors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem;list-style:none;padding:0;margin:1.25rem 0 0}
+.doors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.25rem;list-style:none;padding:0;margin:1.25rem 0 0}
 .door{position:relative;display:flex;flex-direction:column;min-height:21rem;padding:1.4rem 1.25rem 1.5rem;border-radius:2px}
 .door .tool{font-size:.9375rem;font-weight:500}
 .door h3{margin-top:auto;font-size:1.7rem}
@@ -201,7 +201,6 @@ p{margin:0}
 /* ---------- Narrower screens ---------- */
 @media (max-width:64rem){
   .door{min-height:19rem}
-  .features{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (max-width:46rem){
   .hero-inner{grid-template-columns:1fr;min-height:0}
