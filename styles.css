@@ -170,13 +170,13 @@ p{margin:0}
 .clients ul{list-style:none;padding:0;margin:1rem 0 0;display:flex;flex-wrap:wrap;gap:.5rem clamp(1.5rem,4vw,3rem);font-family:var(--serif);font-size:clamp(1.5rem,2.6vw,2rem);font-weight:500;line-height:1.2}
 
 /* About */
-.about-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(1.5rem,6vw,5rem);align-items:start}
+.about-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(1.5rem,6vw,5rem);align-items:center}
 .about-intro .portrait{display:block;width:100%;max-width:20rem;height:auto;margin-top:1.75rem;border-radius:.5rem;border:1px solid var(--field-line);object-fit:cover}
 .about-grid .prose p+p{margin-top:1.1rem}
 .about-grid .prose{max-width:38rem;font-size:1.125rem}
 
 /* Contact */
-.contact-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(1.5rem,6vw,5rem);align-items:start}
+.contact-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(1.5rem,6vw,5rem);align-items:center}
 .form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.1rem 1.25rem}
 .field{display:flex;flex-direction:column;gap:.4rem}
 .field-wide{grid-column:1/-1}
