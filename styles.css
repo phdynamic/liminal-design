@@ -1,0 +1,252 @@
+/* ------------------------------------------------------------------
+   Liminal Design
+   Palette: night, dusk, haze (the dark side of the door)
+            lamp, ember, rose (the light on the other side)
+   ------------------------------------------------------------------ */
+:root{
+  --night:#13152B;
+  --dusk:#1B1D3A;
+  --haze:#262850;
+  --ink:#ECE8F4;
+  --muted:#ABADCB;
+  --lamp:#FFD7A8;
+  --ember:#F2A27E;
+  --rose:#C98BA4;
+  --door-ink:#2A1830;
+  --field-line:rgba(236,232,244,.46);
+  --serif:"Cormorant Garamond","Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --sans:"Hanken Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --wrap:70rem;
+  --gutter:clamp(1rem,4vw,2.5rem);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--night);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:1.0625rem;
+  line-height:1.6;
+}
+img,svg{max-width:100%}
+a{color:var(--lamp);text-underline-offset:.2em;text-decoration-thickness:1px}
+a:hover{color:#fff}
+:focus-visible{outline:2px solid var(--lamp);outline-offset:3px}
+h1,h2,h3{font-family:var(--serif);font-weight:500;line-height:1.08;margin:0;letter-spacing:-.005em}
+h1{font-size:clamp(2.6rem,6.2vw,4.9rem);line-height:1.02}
+h2{font-size:clamp(2.1rem,4.2vw,3.2rem)}
+h3{font-size:1.6rem;line-height:1.15}
+p{margin:0}
+.wrap{max-width:var(--wrap);margin-inline:auto;padding-inline:var(--gutter)}
+.lede{font-size:1.2rem;line-height:1.55;color:var(--muted);max-width:36rem}
+.skip{position:absolute;left:-999rem;top:0;background:var(--lamp);color:var(--door-ink);padding:.6rem 1rem;z-index:20}
+.skip:focus{left:1rem;top:1rem}
+
+/* ---------- Header ---------- */
+.site-header{
+  position:sticky;top:0;z-index:10;
+  background:rgba(19,21,43,.86);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+}
+.site-header .wrap{display:flex;align-items:center;justify-content:space-between;gap:1rem 2rem;flex-wrap:wrap;padding-block:.9rem}
+.wordmark{display:inline-flex;align-items:center;gap:.6rem;font-family:var(--serif);font-size:1.5rem;font-weight:600;color:var(--ink);text-decoration:none;letter-spacing:.01em}
+.wordmark svg{width:1.05rem;height:1.6rem;flex:none}
+.site-nav{display:flex;gap:clamp(1rem,3vw,2rem);flex-wrap:wrap}
+.site-nav a{color:var(--muted);text-decoration:none;font-size:1rem;padding-block:.35rem}
+.site-nav a:hover{color:var(--ink)}
+
+/* ---------- Hero ---------- */
+.hero{
+  position:relative;overflow:hidden;
+  background:
+    radial-gradient(48rem 34rem at 78% 72%,rgba(242,162,126,.17),transparent 62%),
+    radial-gradient(40rem 30rem at 12% 8%,rgba(201,139,164,.09),transparent 60%),
+    linear-gradient(to bottom,var(--night),#181A36);
+}
+.hero-inner{
+  display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr);
+  gap:clamp(1.5rem,5vw,4rem);align-items:end;
+  min-height:min(46rem,90vh);
+  padding-block:clamp(3rem,8vw,6rem) 0;
+}
+.hero-text{align-self:center;padding-bottom:clamp(4rem,10vw,9rem)}
+.hero-text h1{max-width:13ch}
+.hero-text .lede{margin-top:1.75rem}
+.actions{display:flex;flex-wrap:wrap;gap:.9rem;margin-top:2.25rem}
+.btn{
+  display:inline-block;font:inherit;font-weight:600;font-size:1rem;line-height:1.2;
+  padding:.9rem 1.5rem;border-radius:2px;border:1px solid transparent;
+  text-decoration:none;cursor:pointer;
+}
+.btn-light{background:var(--lamp);color:var(--door-ink)}
+.btn-light:hover{background:#fff;color:var(--door-ink)}
+.btn-line{border-color:var(--field-line);color:var(--ink);background:transparent}
+.btn-line:hover{border-color:var(--lamp);color:var(--lamp)}
+
+/* The doorway: the one piece of scenery on the page */
+.threshold{display:flex;justify-content:center;align-items:flex-end;padding-bottom:clamp(6rem,11vw,9rem)}
+.doorway{
+  position:relative;width:min(14.5rem,78%);aspect-ratio:1/2.05;
+  background:linear-gradient(to top,#FFEFD6 0%,#FFD3A3 30%,var(--ember) 64%,var(--rose) 100%);
+  box-shadow:0 0 0 1px rgba(255,215,168,.55),0 0 7rem 1.25rem rgba(242,162,126,.3);
+  perspective:58rem;
+}
+.leaf{
+  position:absolute;inset:0;
+  background:linear-gradient(90deg,#171935,#25284E);
+  box-shadow:inset 0 0 0 1px rgba(236,232,244,.08);
+  transform-origin:left center;
+  transform:rotateY(66deg);
+  animation:swing 2.6s cubic-bezier(.22,.7,.18,1) .25s both;
+}
+.leaf::after{content:"";position:absolute;right:9%;top:52%;width:.55rem;height:.55rem;border-radius:50%;background:rgba(255,215,168,.7)}
+.spill{
+  position:absolute;left:50%;top:100%;width:250%;height:clamp(6rem,11vw,9rem);
+  transform:translateX(-50%);filter:blur(5px);
+  animation:spill 2.6s cubic-bezier(.22,.7,.18,1) .25s both;
+}
+.spill i{
+  display:block;width:100%;height:100%;
+  background:linear-gradient(to bottom,rgba(255,221,180,.6),rgba(255,221,180,0) 92%);
+  clip-path:polygon(30% 0,70% 0,100% 100%,0 100%);
+}
+@keyframes swing{from{transform:rotateY(3deg)}to{transform:rotateY(66deg)}}
+@keyframes spill{from{opacity:0}to{opacity:1}}
+
+/* ---------- Sections ---------- */
+.section{padding-block:clamp(4rem,9vw,7.5rem)}
+.section-tint{background:var(--dusk)}
+.section-head{max-width:40rem}
+.section-head p{margin-top:1rem;color:var(--muted);font-size:1.125rem}
+
+/* Work: each sample is a door. Lit = open now. Dark = on the way. */
+.features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem;margin-top:3.25rem}
+.feature{position:relative;display:flex;flex-direction:column;border-radius:2px}
+.feature img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:2px 2px 0 0}
+.feature-text{flex:1;display:flex;flex-direction:column;padding:1.4rem 1.5rem 1.6rem}
+.feature .tool{font-size:.9375rem;font-weight:500}
+.feature h3{margin-top:1.1rem;font-size:clamp(1.9rem,3vw,2.3rem)}
+.feature .about{margin-top:.75rem;font-size:1.0625rem;line-height:1.5}
+.feature .state{margin-top:auto;padding-top:1.1rem;font-size:1rem;font-weight:600}
+.doors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.25rem;list-style:none;padding:0;margin:1.25rem 0 0}
+.door{position:relative;display:flex;flex-direction:column;min-height:21rem;padding:1.4rem 1.25rem 1.5rem;border-radius:2px}
+.door .tool{font-size:.9375rem;font-weight:500}
+.door h3{margin-top:auto;font-size:1.7rem}
+.door .about{margin-top:.75rem;font-size:.975rem;line-height:1.5}
+.door .state{margin-top:1.1rem;font-size:.9375rem;font-weight:600}
+.door-open,.feature{
+  background:linear-gradient(to top,#FFEFD6 0%,#FFD3A3 34%,var(--ember) 74%,var(--rose) 100%);
+  color:var(--door-ink);
+  box-shadow:0 0 3.5rem -.75rem rgba(242,162,126,.55);
+  transition:box-shadow .25s ease;
+}
+.door-open:hover,.door-open:focus-within,.feature:hover,.feature:focus-within{box-shadow:0 0 5rem -.25rem rgba(255,215,168,.7)}
+.door-open a,.feature a{color:inherit;text-decoration:none}
+.door-open a::after,.feature a::after{content:"";position:absolute;inset:0}
+.door-open a:focus-visible,.feature a:focus-visible{outline:none}
+.door-open:focus-within,.feature:focus-within{outline:2px solid #fff;outline-offset:3px}
+.door-open .state,.feature .state{text-decoration:underline;text-underline-offset:.2em;text-decoration-thickness:1px}
+.door-shut{
+  background:linear-gradient(90deg,#191B38,#24274C);
+  color:var(--ink);
+  border-bottom:2px solid var(--lamp);
+  box-shadow:inset 0 0 0 1px rgba(236,232,244,.1),0 .9rem 1.6rem -.9rem rgba(255,215,168,.6);
+}
+.door-shut::before{content:"";position:absolute;right:1.1rem;top:46%;width:.55rem;height:.55rem;border-radius:50%;background:rgba(255,215,168,.55)}
+.door-shut .tool,.door-shut .about,.door-shut .state{color:var(--muted)}
+
+/* What I build */
+.builds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2.75rem clamp(2rem,6vw,5rem);margin-top:3.25rem}
+.builds p{margin-top:.7rem;color:var(--muted);max-width:30rem}
+
+/* Who I work with: two sides of one line */
+.sides{display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);gap:clamp(1.5rem,5vw,4rem);margin-top:3.25rem}
+.sides .line{background:linear-gradient(to bottom,transparent,var(--lamp) 18%,var(--ember) 82%,transparent);box-shadow:0 0 1.5rem .1rem rgba(242,162,126,.5)}
+.sides p{margin-top:.8rem;color:var(--muted);max-width:28rem}
+.clients{margin-top:clamp(3rem,7vw,5rem)}
+.clients p{color:var(--muted)}
+.clients ul{list-style:none;padding:0;margin:1rem 0 0;display:flex;flex-wrap:wrap;gap:.5rem clamp(1.5rem,4vw,3rem);font-family:var(--serif);font-size:clamp(1.5rem,2.6vw,2rem);font-weight:500;line-height:1.2}
+
+/* About */
+.about-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(1.5rem,6vw,5rem);align-items:start}
+.about-grid .prose p+p{margin-top:1.1rem}
+.about-grid .prose{max-width:38rem;font-size:1.125rem}
+
+/* Contact */
+.contact-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(1.5rem,6vw,5rem);align-items:start}
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.1rem 1.25rem}
+.field{display:flex;flex-direction:column;gap:.4rem}
+.field-wide{grid-column:1/-1}
+.field label{font-weight:500;font-size:1rem}
+.field .hint{color:var(--muted);font-weight:400}
+.field input,.field select,.field textarea{
+  font:inherit;color:var(--ink);background:rgba(236,232,244,.05);
+  border:1px solid var(--field-line);border-radius:2px;padding:.8rem .9rem;width:100%;
+}
+.field select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 1.25rem) 55%,calc(100% - .9rem) 55%;background-size:.35rem .35rem;background-repeat:no-repeat;padding-right:2.5rem}
+.field select option{color:#111;background:#fff}
+.field textarea{min-height:9.5rem;resize:vertical}
+.field input:focus-visible,.field select:focus-visible,.field textarea:focus-visible{outline:2px solid var(--lamp);outline-offset:1px;border-color:var(--lamp)}
+.trap{position:absolute;left:-999rem}
+.form-foot{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:1rem 1.5rem}
+.form-status{color:var(--lamp);min-height:1.6em}
+.form-status.is-error{color:#FFB4A8}
+
+/* Footer */
+.site-footer{padding-block:2.5rem;color:var(--muted);font-size:.975rem}
+.site-footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.75rem 2rem}
+
+/* ---------- Narrower screens ---------- */
+@media (max-width:64rem){
+  .door{min-height:19rem}
+}
+@media (max-width:46rem){
+  .hero-inner{grid-template-columns:1fr;min-height:0}
+  .hero-text{padding-bottom:0}
+  .hero-text h1{max-width:none}
+  .doorway{width:8.5rem}
+  .threshold{padding-top:1rem}
+  .features{grid-template-columns:1fr}
+  .feature-text{padding:1.4rem 1.25rem 1.5rem}
+  .doors{grid-template-columns:1fr}
+  .door{min-height:0}
+  .door h3{margin-top:2.25rem}
+  .door-shut::before{top:1.65rem}
+  .builds,.about-grid,.contact-grid,.form{grid-template-columns:1fr}
+  .sides{grid-template-columns:1fr}
+  .sides .line{height:1px;background:linear-gradient(to right,transparent,var(--lamp) 18%,var(--ember) 82%,transparent)}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .leaf,.spill{animation:none}
+  .door-open,.feature{transition:none}
+}
+
+/* ---------- Case study pages ---------- */
+.case-hero{
+  padding-block:clamp(2.5rem,6vw,4.5rem) clamp(2.5rem,6vw,4rem);
+  background:
+    radial-gradient(44rem 28rem at 88% 0%,rgba(242,162,126,.15),transparent 62%),
+    linear-gradient(to bottom,var(--night),#181A36);
+}
+.back{display:inline-block;color:var(--muted);text-decoration:none;font-size:1rem;padding-block:.25rem}
+.back:hover{color:var(--ink)}
+.case-hero h1{margin-top:1.1rem}
+.case-hero .lede{margin-top:1.25rem;max-width:38rem}
+.facts{display:flex;flex-wrap:wrap;gap:1.5rem clamp(1.75rem,4.5vw,3.5rem);margin:2.5rem 0 0}
+.facts dt{color:var(--muted);font-size:.9375rem}
+.facts dd{margin:.15rem 0 0;font-family:var(--serif);font-size:1.5rem;font-weight:500;line-height:1.2}
+.case-shot{display:block;width:100%;max-width:56rem;height:auto;border-radius:2px;box-shadow:0 0 0 1px rgba(255,215,168,.35),0 0 5rem -1rem rgba(242,162,126,.5)}
+.case-body{padding-block:clamp(3rem,7vw,5rem)}
+.case-prose{max-width:40rem;margin-top:clamp(3rem,6vw,4.5rem)}
+.case-prose h2{font-size:clamp(1.85rem,3.2vw,2.4rem);margin-top:3.25rem}
+.case-prose h2:first-child{margin-top:0}
+.case-prose p{margin-top:1rem;font-size:1.125rem;line-height:1.65}
+.steps{list-style:none;counter-reset:step;padding:0;margin:1.5rem 0 .5rem}
+.steps li{counter-increment:step;display:grid;grid-template-columns:2.25rem minmax(0,1fr);align-items:baseline;padding-block:.55rem;font-size:1.125rem}
+.steps li::before{content:counter(step);font-family:var(--serif);font-size:1.5rem;font-weight:600;color:var(--lamp);line-height:1}
+.case-end h2{max-width:22ch}
+.case-end .actions{margin-top:1.75rem}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
