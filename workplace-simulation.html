@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monday | Liminal Design</title>
+<meta name="description" content="How Monday was made: an adaptive workplace simulation for new team leads, built by hand in HTML, CSS, and JavaScript with Claude Code.">
+<meta property="og:title" content="Monday | Liminal Design">
+<meta property="og:description" content="An adaptive workplace simulation about prioritizing under pressure, and how it was designed and built.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://liminaldesign.online/workplace-simulation.html">
+<link rel="canonical" href="https://liminaldesign.online/workplace-simulation.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2313152B'/%3E%3Crect x='10' y='5' width='12' height='22' fill='%23FFD7A8'/%3E%3Cpath d='M10 5l5 2v18l-5 2z' fill='%2323264A'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body id="top">
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="wordmark" href="index.html" aria-label="Liminal Design, home">
+      <svg viewBox="0 0 21 32" aria-hidden="true"><rect x=".5" y=".5" width="20" height="31" fill="#FFD7A8" stroke="#FFD7A8"/><path d="M.5.5l8 3v25l-8 3z" fill="#23264A"/></svg>
+      Liminal Design
+    </a>
+    <nav class="site-nav" aria-label="Sections">
+      <a href="index.html#work">Work</a>
+      <a href="index.html#services">Services</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="case-hero">
+    <div class="wrap">
+      <a class="back" href="index.html#work">Back to selected work</a>
+      <h1>Monday</h1>
+      <p class="lede">A one-day simulation for a new team lead. The messages keep coming, and what you do with them changes what happens next.</p>
+
+      <dl class="facts">
+        <div><dt>Tool</dt><dd>HTML, CSS, and JavaScript</dd></div>
+        <div><dt>Learner</dt><dd>New team leads</dd></div>
+        <div><dt>Format</dt><dd>Adaptive simulation</dd></div>
+        <div><dt>Time to develop</dt><dd>About 15 hours</dd></div>
+        <div><dt>My role</dt><dd>Design, direction, and build with Claude Code</dd></div>
+      </dl>
+
+      <div class="actions">
+        <a class="btn btn-light" href="samples/workplace-simulation/index.html" target="_blank" rel="noopener">Launch the simulation<span class="sr-only"> (opens in a new tab)</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="case-body">
+    <div class="wrap">
+      <img class="case-shot" src="images/workplace-simulation.jpg" width="1280" height="720" alt="The Monday simulation mid-day: an illustrated office with a window, a wall clock, and a team impact gauge, above an inbox and an open message from a client executive.">
+
+      <article class="case-prose">
+        <h2>The brief</h2>
+        <p>I built Monday as a sample for my portfolio. The learner I had in mind is a new team lead. The skill it practises is prioritizing under pressure: telling what is urgent from what is only loud.</p>
+        <p>I wanted to show adaptive, data-driven learning design. The activity responds to what the learner does, and it shows them a picture of it.</p>
+
+        <h2>How it works</h2>
+        <p>The learner spends one simulated workday, 9:00 to 5:00, in an illustrated office. Messages arrive in the inbox. For each one the learner chooses to do it now, delegate it, schedule it, or decline it. Time passes only when they act, and every action costs minutes and focus.</p>
+        <p>A team impact meter on the office wall moves after every decision. Some consequences arrive hours later, so a choice that looked fine at 10:00 can cost points at 3:00. Nothing is graded, and no message is labelled right or wrong.</p>
+        <p>At 5:00 the day rewinds into a debrief: a priority matrix of every decision, a table of the day in order, and a short note on any habit that showed up.</p>
+
+        <h2>What adapts</h2>
+        <p>Three things adapt. Within a day, a message that is ignored can come back as something worse. Between days, the replay is built from a larger pool of messages and leans toward the habit the learner showed last time, at about the same overall difficulty. Over time, a judgment index and a trend line show whether the learner is improving or slipping.</p>
+        <p>The debrief looks for five habits: favouring rank over impact, favouring quick wins, handling the newest message first, putting off hard items, and delegating work that needs the lead.</p>
+        <p>The adaptivity is rule-based. There is no machine learning, so every note in the debrief can be traced back to the learner's own choices. Results are saved only in the learner's own browser.</p>
+
+        <h2>The process</h2>
+        <p>I built Monday with Claude Code. I decided what the piece had to prove and which skill to practise, chose the visual direction, and asked for the running meter. The work ran in this order:</p>
+        <ol class="steps">
+          <li>Decide what the piece should prove and which skill it practises</li>
+          <li>Write the design and the build plan</li>
+          <li>Build and test the scoring and adaptive logic</li>
+          <li>Tune the scoring against two scripted players, one thoughtful and one reactive</li>
+          <li>Build the office scene, the inbox, and the debrief</li>
+          <li>Check it by keyboard and on a phone</li>
+        </ol>
+        <p>No one has played it yet, so it has not been tested with real learners.</p>
+
+        <h2>The build</h2>
+        <p>Monday is plain HTML, CSS, and JavaScript. There is no framework, no authoring tool, and no server. The office scene and the characters are drawn in code, and the light in the window follows the simulated clock. The logic is kept separate from the screen and is covered by automated tests.</p>
+
+        <h2>The hardest part</h2>
+        <p>Getting the balance between adaptivity and feedback right. The learner needs to see that their choices matter without being told the answer, and the meter and the debrief have to show progress or slipping without turning the day into a quiz.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section section-tint case-end">
+    <div class="wrap">
+      <h2>Try a day yourself.</h2>
+      <div class="actions">
+        <a class="btn btn-light" href="samples/workplace-simulation/index.html" target="_blank" rel="noopener">Launch the simulation<span class="sr-only"> (opens in a new tab)</span></a>
+        <a class="btn btn-line" href="index.html#contact">Start a project</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>&copy; <span id="year">2026</span> Liminal Design</p>
+    <p>Teaching site: <a href="https://professortheriault.com" rel="noopener">professortheriault.com</a></p>
+  </div>
+</footer>
+<script>
+(function () {
+  var year = document.getElementById("year");
+  if (year) year.textContent = new Date().getFullYear();
+})();
+</script>
+</body>
+</html>

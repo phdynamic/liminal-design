@@ -125,6 +125,7 @@ p{margin:0}
 .features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem;margin-top:3.25rem}
 .feature{position:relative;display:flex;flex-direction:column;border-radius:2px}
 .feature img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:2px 2px 0 0}
+.feature:last-child:nth-child(odd){grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
 .feature-text{flex:1;display:flex;flex-direction:column;padding:1.4rem 1.5rem 1.6rem}
 .feature .tool{font-size:.9375rem;font-weight:500}
 .feature h3{margin-top:1.1rem;font-size:clamp(1.9rem,3vw,2.3rem)}
@@ -209,6 +210,7 @@ p{margin:0}
   .doorway{width:8.5rem}
   .threshold{padding-top:1rem}
   .features{grid-template-columns:1fr}
+  .feature:last-child:nth-child(odd){display:flex}
   .feature-text{padding:1.4rem 1.25rem 1.5rem}
   .doors{grid-template-columns:1fr}
   .door{min-height:0}

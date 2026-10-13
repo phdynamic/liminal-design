@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monday | Workplace Simulation | Liminal Design</title>
+<meta name="description" content="An adaptive workplace simulation about prioritizing under pressure, built by hand in HTML, CSS, and JavaScript.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2313152B'/%3E%3Crect x='10' y='5' width='12' height='22' fill='%23FFD7A8'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#game">Skip to the simulation</a>
+<main id="game" class="app" data-screen="intro">
+
+  <section id="intro" class="screen intro" aria-labelledby="intro-h">
+    <a class="exit" href="../../index.html#work">Back to the portfolio</a>
+    <h1 id="intro-h">Monday</h1>
+    <p class="lede">You have just been promoted to team lead. It is 9:00 on a Monday, and the messages are already arriving.</p>
+    <ul class="how">
+      <li>Open a message, then choose what to do with it: <strong>do it now</strong>, <strong>delegate</strong>, <strong>schedule</strong>, or <strong>decline</strong>.</li>
+      <li>Time passes only when you act. Everything you do uses minutes and focus.</li>
+      <li>Your <strong>team impact</strong> rises and falls with your choices. Some consequences arrive hours later.</li>
+      <li>At 5:00 pm you see how you did, what pattern showed up, and how you compare with your last attempt.</li>
+    </ul>
+    <p class="muted">Keyboard: arrow keys move through the inbox, and keys 1 to 4 choose an action. About 10 to 15 minutes. Nothing is graded.</p>
+    <div id="intro-history"></div>
+    <button id="start" class="btn btn-light" type="button">Start the day</button>
+  </section>
+
+  <section id="play" class="screen play" hidden aria-label="The simulation">
+    <div class="hud">
+      <div class="hud-item"><span class="hud-label">Time</span><span id="clock-text" class="hud-value">9:00 am</span></div>
+      <div class="hud-item"><span class="hud-label">Focus</span><span id="focus-text" class="hud-value">100%</span></div>
+      <div class="hud-item"><span class="hud-label">Team impact</span><span class="hud-value"><span id="meter-text">50</span> <span id="meter-arrow" aria-hidden="true"></span></span></div>
+      <button id="end-day" class="btn btn-line" type="button">End the day</button>
+    </div>
+    <div id="scene" class="scene"></div>
+    <div class="work">
+      <section class="inbox" aria-labelledby="inbox-h">
+        <h2 id="inbox-h">Inbox <span id="inbox-count" class="muted"></span></h2>
+        <ul id="inbox" class="cards" role="listbox" aria-label="Inbox messages" tabindex="0"></ul>
+        <p id="inbox-empty" class="muted" hidden>Nothing is waiting. Take a break, or end the day.</p>
+        <button id="wait" class="btn btn-line" type="button">Take a break (15 min)</button>
+      </section>
+      <section class="reader" aria-labelledby="reader-h">
+        <h2 id="reader-h" class="sr-only">Selected message</h2>
+        <p id="reader-empty" class="muted">Select a message to read it.</p>
+        <article id="reader-item" hidden>
+          <header class="reader-head">
+            <span id="reader-avatar" class="avatar"></span>
+            <div><p id="reader-sender" class="reader-sender"></p><p id="reader-role" class="muted"></p></div>
+          </header>
+          <h3 id="reader-subject"></h3>
+          <p id="reader-body"></p>
+          <div id="reader-actions" class="actions" role="group" aria-label="Choose what to do"></div>
+        </article>
+      </section>
+    </div>
+    <div id="bubbles" class="bubbles" aria-hidden="true"></div>
+  </section>
+
+  <section id="debrief" class="screen debrief" hidden aria-labelledby="debrief-h"></section>
+</main>
+<div id="live" class="sr-only" aria-live="polite"></div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
