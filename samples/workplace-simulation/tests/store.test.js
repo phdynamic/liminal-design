@@ -64,3 +64,20 @@ test('missing storage is handled', () => {
   assert.deepEqual(store.attempts(), []);
   assert.equal(store.save(attempt(1)), false);
 });
+
+test('updateLast merges fields into the latest attempt and leaves the others alone', () => {
+  const store = createStore(memory());
+  store.save(attempt(40));
+  store.save(attempt(55));
+  assert.equal(store.updateLast({ commitment: { habit: 'rank', text: 'Ask first.' } }), true);
+  const list = store.attempts();
+  assert.deepEqual(list[1].commitment, { habit: 'rank', text: 'Ask first.' });
+  assert.equal(list[0].commitment, undefined);
+  assert.equal(list[1].meter, 55);
+});
+
+test('updateLast does nothing without attempts and survives broken storage', () => {
+  assert.equal(createStore(memory()).updateLast({ x: 1 }), false);
+  const broken = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); }, removeItem() {} };
+  assert.equal(createStore(broken).updateLast({ x: 1 }), false);
+});

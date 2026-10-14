@@ -1,4 +1,4 @@
-import { CONFIG } from './engine.js';
+import { CONFIG, TENDENCY_KEYS, TENDENCY_LABELS } from './engine.js';
 import { formatClock } from './ui.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -34,6 +34,25 @@ export function crisisReview(summary, crisis) {
       ? 'The crisis was mixed. Some of it was handled well, but at least one important message got less than it needed.'
       : 'The crisis got away from you. With four things at once, the order matters: start with what only you can do.';
   return { title: crisis.title, score, handled, missed: rows.length - handled, delta: rows.reduce((s, r) => s + r.d.delta, 0), text };
+}
+
+// The real measure: high-stakes messages (impact 4 or 5) that got a good response, and how many problems escalated.
+export function highStakes(summary) {
+  const rows = summary.decisions.filter((d) => (summary.items[d.id]?.impact ?? 0) >= 4);
+  return { handled: rows.filter((d) => d.credit >= 0.6).length, total: rows.length, escalations: summary.escalations ?? 0 };
+}
+
+export function commitmentCheck(last, scores) {
+  const c = last?.commitment;
+  if (!c) return '';
+  const label = TENDENCY_LABELS[c.habit] ?? c.habit;
+  const before = last.tendencies?.[c.habit];
+  const after = scores?.[c.habit];
+  const lead = `Last time you chose to work on ${label}.`;
+  if (typeof before !== 'number' || typeof after !== 'number') return lead;
+  if (after > before) return `${lead} It improved, from ${before} to ${after}.`;
+  if (after === before) return `${lead} It stayed the same at ${after}.`;
+  return `${lead} It slipped, from ${before} to ${after}.`;
 }
 
 export function sparkline(values) {
@@ -102,6 +121,39 @@ function callouts(tendencies, summary) {
   }).join('');
 }
 
+function headlinePanel(data) {
+  const hs = data.highStakes;
+  const last = data.previous[data.previous.length - 1];
+  const prev = last?.highStakes && last.highStakes.total ? Math.round((100 * last.highStakes.handled) / last.highStakes.total) : null;
+  const now = hs.total ? Math.round((100 * hs.handled) / hs.total) : null;
+  const tr = now === null ? { arrow: '', text: '' } : trendOf(now, prev);
+  const trouble = hs.escalations
+    ? `${hs.escalations} problem${hs.escalations === 1 ? '' : 's'} got worse because ${hs.escalations === 1 ? 'it was' : 'they were'} ignored.`
+    : 'Nothing you ignored turned into a bigger problem.';
+  return `<div class="panel headline"><h2>What mattered most</h2>
+    <p class="big-text">${hs.handled} of ${hs.total} high-stakes messages handled in time</p>
+    <p>${esc(trouble)}</p>
+    ${tr.text ? `<p class="trend">${tr.arrow} ${esc(tr.text.replace('since your last attempt', 'on high-stakes messages since your last attempt'))}</p>` : ''}
+    <p class="muted">Team impact finished at ${data.summary.meter} out of 100.</p></div>`;
+}
+
+function commitmentPanel(data) {
+  const last = data.previous[data.previous.length - 1];
+  const scores = Object.fromEntries(data.tendencies.map((t) => [t.key, t.score]));
+  const check = commitmentCheck(last, scores);
+  const firedKeys = data.tendencies.filter((t) => t.fired).sort((a, b) => a.score - b.score).map((t) => t.key);
+  const preselected = firedKeys[0] ?? TENDENCY_KEYS[0];
+  const options = TENDENCY_KEYS.map((key) => `<label class="choice"><input type="radio" name="habit" value="${key}"${key === preselected ? ' checked' : ''}> ${esc(TENDENCY_LABELS[key])}${firedKeys.includes(key) ? ' <span class="muted">(showed up today)</span>' : ''}</label>`).join('');
+  return `<div class="panel" id="commit-panel"><h2>Your one change for tomorrow</h2>
+    ${check ? `<p class="muted">${esc(check)}</p>` : ''}
+    <p>Pick one habit to work on, and write what you will do differently on a real Monday.</p>
+    <form id="commit-form"><fieldset><legend class="sr-only">Habit to work on</legend>${options}</fieldset>
+      <label for="commit-text" class="field-label">What will you do differently?</label>
+      <textarea id="commit-text" maxlength="200" rows="3" placeholder="For example: before I reply to anyone senior, I will ask what is at stake."></textarea>
+      <button class="btn btn-light" type="submit">Save my plan</button>
+      <p id="commit-status" class="muted" role="status"></p></form></div>`;
+}
+
 function storyPanel(data) {
   if (!data.epilogue) return '';
   return `<div class="panel story"><h2>Dana's note</h2><p>${esc(data.epilogue.text)}</p>${data.epilogue.note ? `<p>${esc(data.epilogue.note)}</p>` : ''}</div>`;
@@ -144,8 +196,7 @@ export function renderDebrief(root, data) {
   const { summary } = data;
   root.innerHTML = `
     <h1 id="debrief-h" style="font-size:clamp(2.5rem,7vw,4rem)">The day is over</h1>
-    <p class="lede muted" style="margin-top:.75rem">Your team impact finished at <strong>${summary.meter}</strong> out of 100. Here is what your choices looked like.</p>
-    <div style="margin-top:1.5rem">${storyPanel(data)}</div>
+    <div style="margin-top:1.25rem">${headlinePanel(data)}${storyPanel(data)}</div>
     <div class="grid" style="margin-top:1rem">
       <div>
         <div class="panel"><h2>Priority matrix</h2>${matrix(summary)}
@@ -157,6 +208,7 @@ export function renderDebrief(root, data) {
         ${indexPanel(data)}
         ${crisisPanel(data)}
         <div class="panel"><h2>What showed up</h2>${callouts(data.tendencies, summary)}</div>
+        ${commitmentPanel(data)}
       </div>
     </div>
     <div class="row-actions">
@@ -164,6 +216,15 @@ export function renderDebrief(root, data) {
       <button id="clear" class="btn btn-line" type="button">Clear my history</button>
       <a class="btn btn-line" href="../../index.html#work">Back to the portfolio</a>
     </div>`;
+  root.querySelector('#commit-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const habit = root.querySelector('input[name="habit"]:checked')?.value;
+    const text = root.querySelector('#commit-text').value.trim();
+    const status = root.querySelector('#commit-status');
+    if (!habit || !text) { status.textContent = 'Choose a habit and write a sentence first.'; return; }
+    const ok = data.onCommit({ habit, text });
+    status.textContent = ok ? 'Saved. You will see this plan the next time you play.' : 'Your browser blocked saving, so this plan will not be remembered.';
+  });
   root.querySelector('#replay').addEventListener('click', () => data.onReplay());
   root.querySelector('#clear').addEventListener('click', () => data.onClear());
   root.querySelector('#debrief-h').setAttribute('tabindex', '-1');
@@ -175,6 +236,7 @@ export function renderIntroHistory(root, attempts) {
   root.innerHTML = `<div class="panel"><h2 style="font-size:1.4rem">Your history</h2>
     <p>${attempts.length} attempt${attempts.length === 1 ? '' : 's'} so far. Last judgment index: <strong>${last.meter}</strong>.</p>
     ${sparkline(attempts.map((a) => a.meter))}
+    ${last.commitment ? `<p><strong>Your plan from last time:</strong> ${esc(last.commitment.text)} <span class="muted">(${esc(TENDENCY_LABELS[last.commitment.habit] ?? last.commitment.habit)})</span></p>` : ''}
     <p class="muted">Your next day is tuned to the pattern from your last attempt. Your data stays in this browser.</p>
     <button id="clear-intro" class="btn btn-line" type="button">Clear my history</button></div>`;
 }

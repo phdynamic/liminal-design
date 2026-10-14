@@ -1,5 +1,5 @@
 import {
-  CONFIG, startDay, act, waitUntilNext, finishDay, openItems, focusLeft, crisisActive,
+  CONFIG, startDay, act, waitUntilNext, idleSkip, finishDay, openItems, focusLeft, crisisActive,
   detectTendencies, worstTendency, generateDay, FOCUS_TAG_FOR, TENDENCY_KEYS,
 } from './engine.js';
 import { POOL, SENDERS, TEAMMATES } from './data/items.js';
@@ -7,7 +7,7 @@ import { INTRO, beatsBetween, epilogueFor } from './data/story.js';
 import { createStore } from './store.js';
 import { createScene } from './scene.js';
 import { createUi, formatClock } from './ui.js';
-import { renderDebrief, renderIntroHistory, crisisReview } from './debrief.js';
+import { renderDebrief, renderIntroHistory, crisisReview, highStakes } from './debrief.js';
 
 let storage;
 try { storage = window.localStorage; } catch { storage = undefined; }
@@ -96,7 +96,12 @@ function handleAction(id, action) {
   let result;
   try { result = act(state, id, action); } catch { return; }
   ui.showBubble(result.text, result.mood);
+  const skipped = idleSkip(state);
   const notes = processEvents(prevClock);
+  if (skipped && skipped.minutes >= 8) {
+    ui.showBubble('A quiet stretch. You catch your breath.', 'neutral');
+    notes.push('A quiet stretch. You catch your breath.');
+  }
   const net = state.meter - before;
   refresh(net);
   const dir = net >= 0 ? 'up' : 'down';
@@ -143,12 +148,17 @@ function endDay(lastMessage = '') {
     meter: summary.meter,
     tendencies: Object.fromEntries(tendencies.map((t) => [t.key, t.score])),
     crisis: review ? { id: state.crisis.id, score: review.score } : null,
+    highStakes: (({ handled, total }) => ({ handled, total }))(highStakes(summary)),
     decisions: summary.decisions.map(({ id, action, minute, credit }) => ({ id, action, minute, credit })),
   };
   const previous = store.attempts();
   const saved = store.save(attempt);
   const epilogue = epilogueFor(summary.meter, worstTendency(tendencies)?.key ?? null);
-  renderDebrief($('debrief'), { summary, tendencies, previous, attempt, saved, epilogue, crisis: review, onReplay: beginDay, onClear: clearHistory });
+  renderDebrief($('debrief'), {
+    summary, tendencies, previous, attempt, saved, epilogue, crisis: review, highStakes: highStakes(summary),
+    onCommit: (commitment) => store.updateLast({ commitment }),
+    onReplay: beginDay, onClear: clearHistory,
+  });
   showScreen('debrief');
   $('debrief-h').focus();
   ui.announce(`${lastMessage} The day is over. Your team impact finished at ${summary.meter} out of 100.`.trim());

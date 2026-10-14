@@ -65,11 +65,16 @@
         <p>I built Monday as a sample for my portfolio. The learner I had in mind is a new team lead. The skill it practises is prioritizing under pressure: telling what is urgent from what is only loud.</p>
         <p>I wanted to show adaptive, data-driven learning design. The activity responds to what the learner does, and it shows them a picture of it.</p>
 
+        <h2>The problem it solves</h2>
+        <p>I used action mapping, Cathy Moore's method of starting from the problem instead of the content. The goal, for a fictional company, is that new team leads keep small problems from growing into escalations during their first 90 days. The measure is how many high-stakes messages get handled in time.</p>
+        <p>From that goal I listed what a new lead has to do on the job: judge a message by what is at stake and when it is due, notice the quiet message that matters, delegate what a teammate can do well, face the hard items instead of putting them off, and triage fast in a crisis. The habits the debrief looks for are the opposite of those behaviours.</p>
+        <p>The cause is mostly the environment, not missing knowledge. An inbox pushes signals like rank, recency, and ease. So the activity is practice in that environment, with a short triage guide a learner can open as a job aid, not a lecture first.
+
         <h2>How it works</h2>
-        <p>A short story frames the day. The learner is a new team lead on a first Monday, and their old boss, now a vice president, is watching. The learner spends one simulated workday, 9:00 to 5:00, in an illustrated office. Messages arrive in the inbox. For each one the learner chooses to do it now, delegate it, schedule it, or decline it. Time passes only when they act, and every action costs minutes and focus.</p>
+        <p>A short story frames the day. The learner is a new team lead on a first Monday, and their old boss, now a vice president, is watching. The learner spends one simulated workday, 9:00 to 5:00, in an illustrated office. Messages arrive in the inbox. For each one the learner chooses to do it now, delegate it, schedule it, decline it, or send a quick holding reply that buys a little time. Time passes only when they act, and every action costs minutes and focus.</p>
         <p>A team impact meter on the office wall moves after every decision. Some consequences arrive hours later, so a choice that looked fine at 10:00 can cost points at 3:00. Nothing is graded, and no message is labelled right or wrong.</p>
         <p>Once a day, at a random time, a crisis breaks: four connected messages arrive within minutes, from different people with competing deadlines. There are three possible crises, matched in difficulty, and which one happens is chosen by chance. The debrief scores the crisis separately, so the learner can see whether they improve under pressure.</p>
-        <p>At 5:00 the day rewinds into a debrief: a note from the old boss, a priority matrix of every decision, a table of the day in order, a short note on any habit that showed up, and a review of the crisis.</p>
+        <p>At 5:00 the day rewinds into a debrief: a note from the old boss, the real measure first (how many high-stakes messages were handled in time, and how many problems escalated), a priority matrix of every decision, a table of the day in order, a short note on any habit that showed up, and a review of the crisis. It ends by asking the learner to choose one habit and write what they will do differently on a real Monday, and the next attempt checks how that habit changed.</p>
 
         <h2>What adapts</h2>
         <p>Three things adapt. Within a day, a message that is ignored can come back as something worse. Between days, the replay is built from a larger pool of messages and leans toward the habit the learner showed last time, at about the same overall difficulty. Over time, a judgment index and a trend line show whether the learner is improving or slipping.</p>
@@ -79,7 +84,7 @@
         <h2>The process</h2>
         <p>I built Monday with Claude Code. I decided what the piece had to prove and which skill to practise, chose the visual direction, and asked for the running meter. The work ran in this order:</p>
         <ol class="steps">
-          <li>Decide what the piece should prove and which skill it practises</li>
+          <li>Decide what the piece should prove, and name the problem and the behaviours that solve it</li>
           <li>Write the design and the build plan</li>
           <li>Build and test the scoring and adaptive logic</li>
           <li>Tune the scoring against two scripted players, one thoughtful and one reactive</li>

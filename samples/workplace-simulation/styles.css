@@ -45,6 +45,22 @@ a{color:var(--lamp)}
 .caption-crisis{border-left-color:var(--ember);color:var(--ink);font-weight:500}
 #crisis-tint{transition:opacity .6s}
 .story p+p{margin-top:.6rem}
+.big-text{font-family:var(--serif);font-size:clamp(1.8rem,4vw,2.6rem);font-weight:600;line-height:1.15;margin:.2rem 0 .6rem}
+.headline p+p{margin-top:.4rem}
+.choice{display:block;padding:.35rem 0}
+.field-label{display:block;margin:.9rem 0 .35rem;font-weight:600}
+#commit-text{width:100%;padding:.6rem .7rem;font:inherit;color:var(--ink);background:var(--haze);border:1px solid var(--line);border-radius:2px;margin-bottom:.75rem}
+fieldset{border:0;margin:0;padding:0}
+.guide{max-width:36rem;width:calc(100% - 2rem);padding:1.5rem;color:var(--ink);background:var(--dusk);border:1px solid var(--lamp);border-radius:2px}
+.guide::backdrop{background:rgba(10,11,25,.7)}
+.guide h2{font-size:2rem;margin-bottom:.6rem}
+.guide h3{font-size:1.35rem;margin:1rem 0 .4rem}
+.guide ul{margin:0 0 1rem;padding-left:1.2rem}
+.quadrants{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;margin:1rem 0}
+.quadrants>div{padding:.7rem .8rem;background:var(--haze);border-radius:2px}
+.quadrants dt{font-weight:600;font-size:.9375rem;color:var(--lamp)}
+.quadrants dd{margin:.2rem 0 0}
+.action:disabled{opacity:.55;cursor:not-allowed}
 .scene{aspect-ratio:960/320;max-height:300px;width:100%;background:#262850;border:1px solid var(--line);border-radius:2px;overflow:hidden}
 .scene svg{display:block;width:100%;height:100%;overflow:visible}
 .work{display:grid;grid-template-columns:minmax(16rem,22rem) minmax(0,1fr);gap:1.25rem;margin-top:1.25rem;align-items:start}
@@ -81,7 +97,7 @@ a{color:var(--lamp)}
 .debrief .grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:1.5rem;align-items:start}
 .panel{border:1px solid var(--line);background:var(--dusk);padding:1.25rem;border-radius:2px}
 .panel+.panel{margin-top:1rem}
-.big{font-family:var(--serif);font-size:3.5rem;font-weight:600;line-height:1}
+.big{font-family:var(--serif);font-size:3.5rem;font-weight:600;line-height:1.2;margin:.1rem 0 .5rem}
 .trend{font-weight:600}
 .bar{height:10px;background:var(--haze);border-radius:5px;overflow:hidden;margin:.3rem 0 .8rem}
 .bar>span{display:block;height:100%;background:var(--lamp)}
@@ -99,6 +115,7 @@ th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--line)}
 @media (max-width:48rem){
   .work,.debrief .grid{grid-template-columns:minmax(0,1fr)}
   .actions{grid-template-columns:1fr}
+  .quadrants{grid-template-columns:1fr}
   .cards{max-height:14rem}
   .hud .btn{margin-left:0}
 }

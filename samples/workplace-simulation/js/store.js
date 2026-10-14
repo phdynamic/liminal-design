@@ -44,6 +44,13 @@ export function createStore(storage) {
       data.attempts = data.attempts.slice(-MAX_ATTEMPTS);
       return write(data);
     },
+    updateLast(patch) {
+      const data = read();
+      if (!data.attempts.length) return false;
+      const last = data.attempts.length - 1;
+      data.attempts[last] = { ...data.attempts[last], ...patch };
+      return write(data);
+    },
     clear() {
       try {
         storage.removeItem(KEY);

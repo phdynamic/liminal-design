@@ -244,3 +244,110 @@ test('crisisActive is false before the crisis starts and after its messages are 
   act(s, 'c1', 'do_now');
   assert.equal(crisisActive(s), false);
 });
+
+// ---- delegate target and idle skip ----
+import { delegateTarget, idleSkip } from '../js/engine.js';
+
+test('delegateTarget uses the assigned teammate when the message has one', () => {
+  const s = day([item({ id: 'a', delegateTo: 't2' })]);
+  assert.equal(delegateTarget(s, s.items.a).id, 't2');
+});
+
+test('delegateTarget picks the least-loaded teammate when none is assigned, and act uses the same one', () => {
+  const s = day([
+    item({ id: 'a', delegateTo: 't1' }), item({ id: 'b', delegateTo: 't1' }),
+    item({ id: 'c', delegable: false, delegateTo: undefined }),
+  ]);
+  act(s, 'a', 'delegate');
+  act(s, 'b', 'delegate');
+  assert.equal(s.teammates.t1.load, 2);
+  const target = delegateTarget(s, s.items.c);
+  assert.equal(target.id, 't2');
+  const result = act(s, 'c', 'delegate');
+  assert.equal(result.teammate, 't2');
+  assert.equal(s.teammates.t2.load, 1);
+  assert.equal(s.teammates.t1.load, 2);
+});
+
+test('idleSkip does nothing while the inbox has something in it', () => {
+  const s = day([item({ id: 'a', arrivesAt: 0 }), item({ id: 'b', arrivesAt: 50 })]);
+  const before = s.clock;
+  assert.equal(idleSkip(s), null);
+  assert.equal(s.clock, before);
+});
+
+test('idleSkip jumps to the next message when the inbox is empty', () => {
+  const s = day([item({ id: 'a', arrivesAt: 0 }), item({ id: 'b', arrivesAt: 20 })]);
+  act(s, 'a', 'decline');
+  const r = idleSkip(s);
+  assert.equal(s.clock, 20);
+  assert.equal(r.minutes, 19);
+  assert.deepEqual(openItems(s).map((x) => x.id), ['b']);
+});
+
+test('idleSkip never charges the crisis rest penalty and does nothing after the day ends', () => {
+  const s = day([item({ id: 'a', arrivesAt: 0 }), item({ id: 'b', arrivesAt: 20 })]);
+  act(s, 'a', 'decline');
+  const meter = s.meter;
+  idleSkip(s);
+  assert.equal(s.meter, meter);
+  finishDay(s);
+  assert.equal(idleSkip(s), null);
+});
+
+// ---- holding reply ----
+test('a holding reply costs 3 minutes, keeps the message open, and extends a deadline once', () => {
+  const s = day([item({ id: 'a', impact: 4, deadlineIn: 60 })]);
+  const result = act(s, 'a', 'reply');
+  assert.equal(s.clock, CONFIG.HOLD_COST);
+  assert.equal(s.items.a.status, 'open');
+  assert.equal(s.items.a.deadline, 60 + CONFIG.HOLD_EXTENSION);
+  assert.equal(result.extended, true);
+  assert.equal(result.delta, 0);
+  assert.equal(s.decisions.length, 0);
+  const meter = s.meter;
+  const again = act(s, 'a', 'reply');
+  assert.equal(again.extended, false);
+  assert.equal(s.items.a.deadline, 60 + CONFIG.HOLD_EXTENSION);
+  assert.equal(s.meter, meter);
+});
+
+test('a holding reply saves a message that would otherwise expire', () => {
+  const fu = item({ id: 'f1', impact: 4, deadlineIn: 60 });
+  const s = day([item({ id: 'a', impact: 4, deadlineIn: 40, tags: ['escalates'], escalatesTo: 'f1' })], { f1: fu });
+  act(s, 'a', 'reply');
+  tick(s, 60);
+  assert.equal(s.items.a.status, 'open');
+  assert.equal(s.items.f1, undefined);
+  tick(s, 40 + CONFIG.HOLD_EXTENSION);
+  assert.equal(s.items.a.status, 'expired');
+});
+
+test('a holding reply on a message with nothing due buys nothing', () => {
+  const s = day([item({ id: 'a', impact: 3, deadlineIn: null })]);
+  const result = act(s, 'a', 'reply');
+  assert.equal(result.extended, false);
+  assert.equal(s.items.a.deadline, null);
+  assert.equal(s.items.a.status, 'open');
+  assert.match(result.text, /nothing was due/i);
+});
+
+test('a message can still be handled normally after a holding reply', () => {
+  const s = day([item({ id: 'a', impact: 5, deadlineIn: 80 })]);
+  act(s, 'a', 'reply');
+  const r = act(s, 'a', 'do_now');
+  assert.equal(r.action, 'do_now');
+  assert.equal(s.items.a.status, 'resolved');
+  assert.equal(s.decisions.length, 1);
+});
+
+test('the day summary counts escalations that actually arrived', () => {
+  const fu = item({ id: 'f1', impact: 4, deadlineIn: 60 });
+  const s = day([item({ id: 'a', impact: 3, tags: ['escalates'], escalatesTo: 'f1' })], { f1: fu });
+  act(s, 'a', 'decline');
+  tick(s, 200);
+  const summary = finishDay(s);
+  assert.equal(summary.escalations, 1);
+  const clean = finishDay(day([item({ id: 'z' })]));
+  assert.equal(clean.escalations, 0);
+});

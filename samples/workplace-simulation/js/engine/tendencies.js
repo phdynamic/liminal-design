@@ -1,4 +1,5 @@
 export const TENDENCY_KEYS = ['rank', 'quick', 'recency', 'avoidance', 'delegation'];
+export const TENDENCY_LABELS = { rank: 'Rank bias', quick: 'Quick-win bias', recency: 'Recency bias', avoidance: 'Avoidance', delegation: 'Over-delegation' };
 
 const mean = (list) => (list.length ? list.reduce((s, x) => s + x, 0) / list.length : 0);
 const score = (share, m) => Math.max(0, Math.min(100, Math.round(100 * (1 - share * (1 - m)))));

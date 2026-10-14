@@ -21,7 +21,8 @@
     <div id="intro-story" class="story-text"></div>
 
     <h2>Your goal</h2>
-    <p>Finish the day with your team's <strong>impact</strong> as high as you can. Impact is how much your decisions helped the team, weighted by how much each message mattered. A big, urgent message moves it a lot. A small one barely moves it. Some days something goes wrong, and you will not know when.</p>
+    <p>Your job today is to keep problems from getting bigger: get the <strong>high-stakes</strong> messages handled in time. At 5:00 you will see how many you caught, and how many problems you let escalate.</p>
+    <p>Your team's <strong>impact</strong> tracks how it is going. It is how much your decisions helped the team, weighted by how much each message mattered. A big, urgent message moves it a lot. A small one barely moves it. Some days something goes wrong, and you will not know when.</p>
 
     <h2>What the numbers mean</h2>
     <dl class="meanings">
@@ -31,18 +32,19 @@
       <div><dt>Judgment index</dt><dd>At the end of the day, your final team impact becomes your judgment index. It is saved in this browser so you can see whether you improve from one attempt to the next.</dd></div>
     </dl>
 
-    <h2>Your four moves</h2>
+    <h2>Your five moves</h2>
     <dl class="meanings">
       <div><dt>Do it now</dt><dd>You handle it yourself. It costs time and focus, and it is right for what only you can do.</dd></div>
       <div><dt>Delegate</dt><dd>A teammate handles it. It is quick, but it only works for tasks they can do well, and a teammate who is already busy does worse.</dd></div>
       <div><dt>Schedule</dt><dd>You put it off. That is fine for something that is not due today, and costly for something that is.</dd></div>
       <div><dt>Decline</dt><dd>You close it without acting. That is right for noise, and costly for anything that mattered.</dd></div>
+      <div><dt>Send a holding reply</dt><dd>A quick note that you are on it. If something is due today, it buys you a little more time. The message stays in your inbox, so you still have to deal with it.</dd></div>
     </dl>
-    <p>When your inbox is empty, <strong>take a break</strong>. It skips ahead to the next message and refills some focus.</p>
+    <p>When your inbox is empty, the day moves on to the next message by itself. You can also <strong>take a break</strong> to refill some focus. If you want a reminder of how to sort messages, open the <strong>Triage guide</strong> at any time. Time stops while you read it.</p>
 
     <h2>At 5:00</h2>
     <p>You will see a priority matrix of your choices, your day in order, any habits that showed up, how you handled the crisis, and a note from Dana.</p>
-    <p class="muted">Keyboard: arrow keys move through the inbox, and keys 1 to 4 choose an action. About 10 to 15 minutes. Nothing is graded.</p>
+    <p class="muted">Keyboard: arrow keys move through the inbox, and keys 1 to 5 choose an action. About 10 to 15 minutes. Nothing is graded.</p>
     <div id="intro-history"></div>
     <button id="start" class="btn btn-light" type="button">Start the day</button>
   </section>
@@ -53,6 +55,7 @@
       <div class="hud-item"><span class="hud-label">Focus</span><span id="focus-text" class="hud-value">100%</span></div>
       <div class="hud-item"><span class="hud-label">Team impact</span><span class="hud-value"><span id="meter-text">50</span> <span id="meter-arrow" aria-hidden="true"></span></span></div>
       <p id="crisis-badge" class="crisis-badge" hidden>Crisis in progress</p>
+      <button id="open-guide" class="btn btn-line" type="button">Triage guide</button>
       <button id="end-day" class="btn btn-line" type="button">End the day</button>
     </div>
     <div class="scene-wrap">
@@ -84,6 +87,27 @@
   </section>
 
   <section id="debrief" class="screen debrief" hidden aria-labelledby="debrief-h"></section>
+
+  <dialog id="guide" class="guide" aria-labelledby="guide-h">
+    <h2 id="guide-h">Triage guide</h2>
+    <p>Ask two questions about every message: <strong>how much is at stake</strong>, and <strong>when is it due</strong>? Time stops while this is open.</p>
+    <dl class="quadrants">
+      <div><dt>Important and due soon</dt><dd><strong>Do it now.</strong> Only you can fix it, or it cannot wait.</dd></div>
+      <div><dt>Important, not due today</dt><dd><strong>Schedule it, and mean it.</strong> Put a time on it so it does not slip.</dd></div>
+      <div><dt>Due soon, less important</dt><dd><strong>Delegate.</strong> Hand it to someone who can do it well and is not already swamped.</dd></div>
+      <div><dt>Neither important nor due</dt><dd><strong>Decline.</strong> Say no kindly and move on.</dd></div>
+    </dl>
+    <p>If you cannot get to something important in time, a <strong>holding reply</strong> can buy you a little room.</p>
+    <h3>Traps to watch for</h3>
+    <ul>
+      <li>Who is asking is not how much is at stake.</li>
+      <li>The newest message is not always the most urgent.</li>
+      <li>Small tasks feel productive. Do the big ones first.</li>
+      <li>Hard items do not get easier by waiting.</li>
+      <li>A quiet message from a junior colleague can be the most important one in the inbox.</li>
+    </ul>
+    <form method="dialog"><button class="btn btn-light" type="submit">Back to the day</button></form>
+  </dialog>
 </main>
 <div id="live" class="sr-only" aria-live="polite"></div>
 <script type="module" src="js/main.js"></script>

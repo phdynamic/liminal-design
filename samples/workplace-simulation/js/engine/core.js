@@ -10,6 +10,8 @@ export const CONFIG = {
   COST: { delegate: 5, schedule: 2, decline: 1 },
   WAIT_MINUTES: 15,
   BREAK_CAP: 30,
+  HOLD_COST: 3,
+  HOLD_EXTENSION: 30,
   CRISIS_BREAK_PENALTY: 2,
   TEAMMATE_LOAD_LIMIT: 2,
   EXPIRY_PENALTY_PER_IMPACT: 1.5,
@@ -179,11 +181,34 @@ function leastLoaded(state) {
   return Object.values(state.teammates).sort((a, b) => a.load - b.load)[0];
 }
 
+// Who a delegated message would actually go to: its assigned teammate, or the least-loaded one.
+export function delegateTarget(state, rec) {
+  return state.teammates[rec.def.delegateTo] ?? leastLoaded(state);
+}
+
+// A quick "I'm on it" reply: the message stays open, and if it is due today the deadline moves back once.
+function holdingReply(state, rec) {
+  const eventsFrom = state.events.length;
+  const minute = state.clock;
+  const due = rec.deadline !== null && rec.deadline <= CONFIG.DAY_MINUTES;
+  const extended = due && !rec.held;
+  let text;
+  if (rec.held) text = 'You have already replied to this one.';
+  else if (extended) text = rec.def.holdText ?? 'You sent a quick reply. They know you are on it, and you bought some time.';
+  else text = 'Nothing was due yet, so the reply bought you nothing.';
+  if (extended) rec.deadline += CONFIG.HOLD_EXTENSION;
+  rec.held = true;
+  pushEvent(state, 'hold', rec.id, { extended });
+  tick(state, state.clock + CONFIG.HOLD_COST);
+  return { id: rec.id, action: 'reply', minute, delta: 0, credit: null, mood: 'neutral', extended, text, events: state.events.slice(eventsFrom) };
+}
+
 export function act(state, itemId, action) {
   if (state.ended) throw new Error('The day has ended.');
-  if (!ACTIONS.includes(action)) throw new Error(`Unknown action: ${action}`);
+  if (!ACTIONS.includes(action) && action !== 'reply') throw new Error(`Unknown action: ${action}`);
   const rec = state.items[itemId];
   if (!rec || rec.status !== 'open') throw new Error(`Item ${itemId} is not open.`);
+  if (action === 'reply') return holdingReply(state, rec);
 
   const eventsFrom = state.events.length;
   const minute = state.clock;
@@ -200,7 +225,7 @@ export function act(state, itemId, action) {
     cost = CONFIG.COST[action];
   }
   if (action === 'delegate') {
-    teammate = state.teammates[rec.def.delegateTo] ?? leastLoaded(state);
+    teammate = delegateTarget(state, rec);
     ctx.teammateFree = teammate.load < CONFIG.TEAMMATE_LOAD_LIMIT;
     teammate.load += 1;
   }
@@ -254,8 +279,15 @@ export function waitUntilNext(state, cap = CONFIG.BREAK_CAP) {
   return { ...result, minutes, penalized };
 }
 
+// When the inbox is empty the day moves on to the next message by itself, so there are no dead moments.
+export function idleSkip(state) {
+  if (state.ended || state.clock >= CONFIG.DAY_MINUTES || openItems(state).length > 0) return null;
+  return waitUntilNext(state);
+}
+
 function summarize(state) {
-  return { meter: Math.round(state.meter), decisions: state.decisions, items: state.items, focusUsed: state.focusUsed };
+  const escalations = Object.values(state.items).filter((r) => r.isFollowUp && r.arrivedAt !== null).length;
+  return { meter: Math.round(state.meter), decisions: state.decisions, items: state.items, focusUsed: state.focusUsed, escalations };
 }
 
 export function finishDay(state) {

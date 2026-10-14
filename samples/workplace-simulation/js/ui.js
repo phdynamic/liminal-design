@@ -1,7 +1,8 @@
-import { CONFIG, ACTIONS, doNowCost, openItems } from './engine.js';
+import { CONFIG, ACTIONS, doNowCost, openItems, delegateTarget } from './engine.js';
 import { avatar } from './avatar.js';
 
-const LABEL = { do_now: 'Do it now', delegate: 'Delegate', schedule: 'Schedule', decline: 'Decline' };
+const LABEL = { do_now: 'Do it now', delegate: 'Delegate', schedule: 'Schedule', decline: 'Decline', reply: 'Send a holding reply' };
+const ALL_ACTIONS = [...ACTIONS, 'reply'];
 
 export function formatClock(minute) {
   const total = 9 * 60 + Math.max(0, Math.round(minute));
@@ -39,10 +40,11 @@ export function createUi({ senders, teammates, onSelect, onAction, onWait, onEnd
   function actionNote(state, rec, action) {
     if (action === 'do_now') return `Takes about ${doNowCost(state, rec)} min`;
     if (action === 'delegate') {
-      const mate = state.teammates[rec.def.delegateTo] ?? Object.values(state.teammates)[0];
+      const mate = delegateTarget(state, rec);
       const busy = mate.load >= CONFIG.TEAMMATE_LOAD_LIMIT;
       return `${CONFIG.COST.delegate} min. ${mate.name} ${busy ? 'is already swamped' : `has ${mate.load} task${mate.load === 1 ? '' : 's'}`}`;
     }
+    if (action === 'reply') return rec.held ? 'You have already replied' : `${CONFIG.HOLD_COST} min. Tell them you are on it and ask for a little time`;
     if (action === 'schedule') return `${CONFIG.COST.schedule} min. Deal with it later`;
     return `${CONFIG.COST.decline} min. Close it without acting`;
   }
@@ -62,8 +64,8 @@ export function createUi({ senders, teammates, onSelect, onAction, onWait, onEnd
     $('reader-role').textContent = sender.role;
     $('reader-subject').textContent = rec.def.subject;
     $('reader-body').textContent = rec.def.body;
-    $('reader-actions').innerHTML = ACTIONS.map((action, i) => `
-      <button type="button" class="action" data-action="${action}">
+    $('reader-actions').innerHTML = ALL_ACTIONS.map((action, i) => `
+      <button type="button" class="action" data-action="${action}"${action === 'reply' && rec.held ? ' disabled' : ''}>
         <span class="action-name"><kbd aria-hidden="true">${i + 1}</kbd>${LABEL[action]}</span>
         <span class="action-note">${esc(actionNote(state, rec, action))}</span>
       </button>`).join('');
@@ -145,14 +147,15 @@ export function createUi({ senders, teammates, onSelect, onAction, onWait, onEnd
   });
 
   document.addEventListener('keydown', (e) => {
-    if ($('play').hidden || e.metaKey || e.ctrlKey || e.altKey) return;
-    const i = ['1', '2', '3', '4'].indexOf(e.key);
+    if ($('play').hidden || $('guide').open || e.metaKey || e.ctrlKey || e.altKey) return;
+    const i = ['1', '2', '3', '4', '5'].indexOf(e.key);
     if (i >= 0 && selectedId) {
       e.preventDefault();
-      if (!e.repeat && gate.allow()) onAction(selectedId, ACTIONS[i]);
+      if (!e.repeat && gate.allow()) onAction(selectedId, ALL_ACTIONS[i]);
     }
   });
 
+  $('open-guide').addEventListener('click', () => $('guide').showModal());
   $('wait').addEventListener('click', () => onWait());
   $('end-day').addEventListener('click', () => onEnd());
 
