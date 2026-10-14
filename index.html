@@ -206,7 +206,8 @@
         <p>Tell me what you're building and when you need it. I'll reply by email.</p>
       </div>
 
-      <form class="form" id="contact-form" novalidate>
+      <form class="form" id="contact-form" name="contact" method="POST" data-netlify="true" netlify-honeypot="_gotcha" novalidate>
+        <input type="hidden" name="form-name" value="contact">
         <div class="field">
           <label for="f-name">Name</label>
           <input id="f-name" name="name" type="text" autocomplete="name" required>
@@ -255,12 +256,11 @@
 </footer>
 <script>
 /* Contact form
-   The site is static, so the form posts to a form service that forwards
-   messages to your inbox. Paste the service's endpoint between the quotes.
-   Formspree example: "https://formspree.io/f/abcdwxyz"
+   Netlify Forms collects the messages. Netlify finds the form in this page
+   when the site deploys, and the script below sends it without leaving the page.
+   To get each message by email, add a notification in the Netlify dashboard:
+   Forms > Form notifications > Add notification > Email notification.
 */
-var FORM_ENDPOINT = "";
-
 (function () {
   var year = document.getElementById("year");
   if (year) year.textContent = new Date().getFullYear();
@@ -292,18 +292,19 @@ var FORM_ENDPOINT = "";
       form.email.focus();
       return;
     }
-    if (!FORM_ENDPOINT) {
-      say("This form isn't connected to an inbox yet.", true);
+    if (form.elements["_gotcha"] && form.elements["_gotcha"].value) {
+      form.reset();
+      say("Message sent. I'll reply by email.");
       return;
     }
 
     button.disabled = true;
     say("Sending message...");
 
-    fetch(FORM_ENDPOINT, {
+    fetch("/", {
       method: "POST",
-      headers: { "Accept": "application/json" },
-      body: new FormData(form)
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(new FormData(form)).toString()
     }).then(function (response) {
       if (!response.ok) throw new Error("Form service returned " + response.status);
       form.reset();
