@@ -4,7 +4,7 @@ export const CONFIG = {
   DAY_MINUTES: 480,
   START_METER: 50,
   K: 1,
-  EFFORT_SCALE: 1.7,
+  EFFORT_SCALE: 1.5,
   FOCUS_CAPACITY: 300,
   FATIGUE_MULT: 1.5,
   COST: { delegate: 5, schedule: 2, decline: 1 },
@@ -171,8 +171,8 @@ export function focusLeft(state) {
   return Math.max(0, 1 - state.focusUsed / CONFIG.FOCUS_CAPACITY);
 }
 
-export function doNowCost(state, rec) {
-  const base = rec.effort * CONFIG.EFFORT_SCALE;
+export function doNowCost(state, rec, effort = rec.effort) {
+  const base = effort * CONFIG.EFFORT_SCALE;
   const fatigued = state.focusUsed >= CONFIG.FOCUS_CAPACITY;
   return Math.round(base * (fatigued ? CONFIG.FATIGUE_MULT : 1));
 }
@@ -205,10 +205,15 @@ function holdingReply(state, rec) {
 
 export function act(state, itemId, action) {
   if (state.ended) throw new Error('The day has ended.');
-  if (!ACTIONS.includes(action) && action !== 'reply') throw new Error(`Unknown action: ${action}`);
   const rec = state.items[itemId];
   if (!rec || rec.status !== 'open') throw new Error(`Item ${itemId} is not open.`);
-  if (action === 'reply') return holdingReply(state, rec);
+  // A message with specific responses takes one of those; any other message takes a generic action.
+  const choices = rec.def.choices ?? null;
+  const choice = choices ? choices.find((c) => c.id === action) : null;
+  if (choices && !choice) throw new Error(`Item ${itemId} needs one of its listed responses.`);
+  if (!choices && !ACTIONS.includes(action) && action !== 'reply') throw new Error(`Unknown action: ${action}`);
+  if (!choice && action === 'reply') return holdingReply(state, rec);
+  const kind = choice ? choice.kind : action;
 
   const eventsFrom = state.events.length;
   const minute = state.clock;
@@ -218,33 +223,38 @@ export function act(state, itemId, action) {
   let cost;
   let teammate = null;
   const ctx = {};
-  if (action === 'do_now') {
-    cost = doNowCost(state, rec);
-    state.focusUsed += rec.effort * CONFIG.EFFORT_SCALE;
+  if (kind === 'do_now') {
+    const effort = choice?.effort ?? rec.effort;
+    cost = doNowCost(state, rec, effort);
+    state.focusUsed += effort * CONFIG.EFFORT_SCALE;
   } else {
-    cost = CONFIG.COST[action];
+    cost = CONFIG.COST[kind];
   }
-  if (action === 'delegate') {
+  if (kind === 'delegate' && !choice?.external) {
     teammate = delegateTarget(state, rec);
     ctx.teammateFree = teammate.load < CONFIG.TEAMMATE_LOAD_LIMIT;
     teammate.load += 1;
   }
 
-  const credit = creditFor(rec, action, ctx);
+  let credit;
+  if (choice) credit = kind === 'delegate' && ctx.teammateFree === false ? choice.credit * 0.5 : choice.credit;
+  else credit = creditFor(rec, kind, ctx);
   const delta = decisionDelta(rec, credit);
   adjustMeter(state, delta);
-  rec.action = action;
+  rec.action = kind;
   rec.credit = credit;
-  rec.status = action === 'schedule' ? 'scheduled' : 'resolved';
+  rec.status = kind === 'schedule' ? 'scheduled' : 'resolved';
 
   const mood = moodFor(credit);
-  const decision = { id: rec.id, action, minute, credit, delta, mood, newest, openCount: open.length, teammate: teammate?.id ?? null };
+  const text = choice ? choice.text : outcomeText(rec, kind, credit);
+  const decision = { id: rec.id, action: kind, minute, credit, delta, mood, newest, openCount: open.length, teammate: teammate?.id ?? null, text };
+  if (choice) { decision.choiceId = choice.id; decision.choiceLabel = choice.label; }
   state.decisions.push(decision);
-  pushEvent(state, 'decision', rec.id, { action, credit, delta, mood });
-  if (action === 'decline') escalate(state, rec);
+  pushEvent(state, 'decision', rec.id, { action: kind, credit, delta, mood });
+  if (kind === 'decline') escalate(state, rec);
 
   tick(state, state.clock + cost);
-  return { ...decision, text: outcomeText(rec, action, credit), events: state.events.slice(eventsFrom) };
+  return { ...decision, events: state.events.slice(eventsFrom) };
 }
 
 export function wait(state, minutes = CONFIG.WAIT_MINUTES) {

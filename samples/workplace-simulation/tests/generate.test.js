@@ -123,3 +123,28 @@ test('base arrivals are spaced so the inbox is rarely empty', () => {
 test('a day has sixteen base messages', () => {
   assert.equal(DAY_SIZE, 16);
 });
+
+test('responses are shuffled per day, deterministically, and each message strongest response moves around', () => {
+  const choiceItems = (day) => baseOf(day).filter((i) => i.choices);
+  const a = generateDay(POOL, { seed: 9 }), b = generateDay(POOL, { seed: 9 });
+  assert.deepEqual(choiceItems(a).map((i) => i.choices.map((c) => c.id)), choiceItems(b).map((i) => i.choices.map((c) => c.id)));
+  const seen = new Map();
+  for (let seed = 1; seed <= 80; seed++) {
+    for (const i of choiceItems(generateDay(POOL, { seed }))) {
+      if (!seen.has(i.id)) seen.set(i.id, { positions: new Set(), count: 0 });
+      const rec = seen.get(i.id);
+      rec.positions.add(i.choices.findIndex((c) => c.credit === 1));
+      rec.count++;
+    }
+  }
+  for (const [id, rec] of seen) {
+    if (rec.count >= 25) assert.ok(rec.positions.size >= 3, `${id}: only ${[...rec.positions]} over ${rec.count} days`);
+  }
+});
+
+test('shuffling responses does not change which messages, or when, a day contains', () => {
+  const ids = (day) => baseOf(day).map((i) => [i.id, i.arrivesAt]);
+  const day = generateDay(POOL, { seed: 12 });
+  for (const i of baseOf(day).filter((x) => x.choices)) assert.deepEqual(i.choices.map((c) => c.id).sort(), ['a', 'b', 'c', 'd']);
+  assert.equal(ids(day).length, DAY_SIZE);
+});

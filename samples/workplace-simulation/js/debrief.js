@@ -42,6 +42,28 @@ export function highStakes(summary) {
   return { handled: rows.filter((d) => d.credit >= 0.6).length, total: rows.length, escalations: summary.escalations ?? 0 };
 }
 
+// The twelve messages with specific responses: what the learner chose, what happened, and what a strong response looked like.
+export function keyDecisions(summary) {
+  return summary.decisions
+    .map((d) => ({ d, rec: summary.items[d.id] }))
+    .filter(({ rec }) => rec && rec.def.choices)
+    .map(({ d, rec }) => {
+      const choices = rec.def.choices;
+      const chosen = d.choiceId ? choices.find((c) => c.id === d.choiceId) : null;
+      const best = [...choices].sort((a, b) => b.credit - a.credit)[0];
+      return {
+        id: d.id,
+        subject: rec.def.subject,
+        chosen: d.choiceLabel ?? 'No response in time',
+        text: d.text ?? 'Nobody responded in time, and it got worse.',
+        result: FILL_WORD(d.credit),
+        strongest: best.label,
+        why: rec.def.why ?? '',
+        habit: chosen?.trap ? (TENDENCY_LABELS[chosen.trap] ?? null) : null,
+      };
+    });
+}
+
 export function commitmentCheck(last, scores) {
   const c = last?.commitment;
   if (!c) return '';
@@ -119,6 +141,20 @@ function callouts(tendencies, summary) {
       <p>${esc(t.suggestion)}</p>
       ${subjects.length ? `<p class="muted">Where it showed up: ${subjects.map(esc).join('; ')}.</p>` : ''}</div>`;
   }).join('');
+}
+
+function keyDecisionsPanel(summary) {
+  const rows = keyDecisions(summary);
+  if (!rows.length) return '';
+  const items = rows.map((r) => `<article class="key">
+    <h3>${esc(r.subject)}</h3>
+    <p><strong>You chose:</strong> ${esc(r.chosen)} <span class="muted">(${r.result} result)</span></p>
+    <p>${esc(r.text)}</p>
+    ${r.result === 'strong' ? '' : `<p><strong>A strong response:</strong> ${esc(r.strongest)}</p>`}
+    ${r.why ? `<p class="muted">${esc(r.why)}</p>` : ''}
+    ${r.habit ? `<p class="muted">That response is the pull of ${esc(r.habit.toLowerCase())}.</p>` : ''}
+  </article>`).join('');
+  return `<div class="panel"><h2>Your key decisions</h2><p class="muted">These messages had more than one reasonable response. Here is what you chose and what a strong response looked like.</p>${items}</div>`;
 }
 
 function headlinePanel(data) {
@@ -202,6 +238,7 @@ export function renderDebrief(root, data) {
         <div class="panel"><h2>Priority matrix</h2>${matrix(summary)}
           <p class="legend"><span>Circle: did it now</span><span>Square: delegated</span><span>Triangle: scheduled</span><span>Diamond: declined</span><span>Cross: not handled</span></p>
           <p class="legend"><span>Green: strong result</span><span>Amber: mixed</span><span>Red: weak</span></p></div>
+        ${keyDecisionsPanel(summary)}
         <div class="panel"><h2>Your day, in order</h2>${timelineTable(summary)}</div>
       </div>
       <div>

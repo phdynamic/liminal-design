@@ -61,6 +61,12 @@ fieldset{border:0;margin:0;padding:0}
 .quadrants dt{font-weight:600;font-size:.9375rem;color:var(--lamp)}
 .quadrants dd{margin:.2rem 0 0}
 .action:disabled{opacity:.55;cursor:not-allowed}
+.actions.specific{grid-template-columns:1fr}
+.action-specific .action-name{font-weight:500}
+.key{padding:.9rem 0;border-top:1px solid var(--line)}
+.key:first-of-type{border-top:0}
+.key h3{font-size:1.35rem;margin-bottom:.35rem}
+.key p+p{margin-top:.35rem}
 .scene{aspect-ratio:960/320;max-height:300px;width:100%;background:#262850;border:1px solid var(--line);border-radius:2px;overflow:hidden}
 .scene svg{display:block;width:100%;height:100%;overflow:visible}
 .work{display:grid;grid-template-columns:minmax(16rem,22rem) minmax(0,1fr);gap:1.25rem;margin-top:1.25rem;align-items:start}

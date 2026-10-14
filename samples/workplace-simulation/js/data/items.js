@@ -1,4 +1,5 @@
 import { CRISES } from './crises.js';
+import { CHOICES } from './choices.js';
 
 export const SENDERS = {
   dana:   { id: 'dana',   name: 'Dana Whitfield', role: 'VP of Operations',         rank: 3, skin: '#d9a47a', hair: '#3b2a24', hairStyle: 'short', shirt: '#5b4b8a' },
@@ -20,7 +21,7 @@ export const TEAMMATES = [
 
 // Fields: id, sender, subject, body, deadlineIn (minutes after arrival, or null),
 // impact 1-5, effort (minutes), tags, delegable, delegateTo, escalatesTo, rubric, outcomes.
-export const ITEMS = [
+const BASE_ITEMS = [
   { id: 'i01', sender: 'dana', subject: 'Quick favor on my slides',
     body: "Can you tidy the fonts on my town-hall deck? It isn't until Thursday, but I'd love it done today.",
     deadlineIn: null, impact: 1, effort: 25, tags: ['rank-pressure'], delegable: true, delegateTo: 'avery',
@@ -144,6 +145,9 @@ export const ITEMS = [
     deadlineIn: 180, impact: 4, effort: 30, tags: [], delegable: true, delegateTo: 'avery',
     outcomes: { do_now: 'You spoke to the customer and settled it on the spot.', decline: 'The customer posted about it online, and it spread.' } },
 ];
+
+// Tagged messages get specific responses (see choices.js).
+export const ITEMS = BASE_ITEMS.map((item) => (CHOICES[item.id] ? { ...item, ...CHOICES[item.id] } : item));
 
 export const FOLLOW_UPS = {
   f01: { id: 'f01', sender: 'marcus', subject: 'Our CEO is now asking',

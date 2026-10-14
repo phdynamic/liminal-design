@@ -4,6 +4,12 @@ import { avatar } from './avatar.js';
 const LABEL = { do_now: 'Do it now', delegate: 'Delegate', schedule: 'Schedule', decline: 'Decline', reply: 'Send a holding reply' };
 const ALL_ACTIONS = [...ACTIONS, 'reply'];
 
+// The options a message offers: its own specific responses, or the generic actions.
+function optionsFor(rec) {
+  if (rec.def.choices) return rec.def.choices.map((c) => ({ id: c.id, label: c.label, kind: c.kind, effort: c.effort, external: c.external, specific: true }));
+  return ALL_ACTIONS.map((a) => ({ id: a, label: LABEL[a], kind: a, specific: false }));
+}
+
 export function formatClock(minute) {
   const total = 9 * 60 + Math.max(0, Math.round(minute));
   const h = Math.floor(total / 60);
@@ -37,15 +43,21 @@ export function createUi({ senders, teammates, onSelect, onAction, onWait, onEnd
   const known = new Set();
   const gate = createGate();
 
-  function actionNote(state, rec, action) {
-    if (action === 'do_now') return `Takes about ${doNowCost(state, rec)} min`;
-    if (action === 'delegate') {
+  function actionNote(state, rec, option) {
+    const kind = option.kind;
+    if (option.specific && kind !== 'do_now') {
+      const mate = kind === 'delegate' && !option.external ? delegateTarget(state, rec) : null;
+      const minutes = kind === 'delegate' ? CONFIG.COST.delegate : CONFIG.COST[kind];
+      return mate ? `${minutes} min. ${mate.name} ${mate.load >= CONFIG.TEAMMATE_LOAD_LIMIT ? 'is already swamped' : `has ${mate.load} task${mate.load === 1 ? '' : 's'}`}` : `${minutes} min`;
+    }
+    if (kind === 'do_now') return `Takes about ${doNowCost(state, rec, option.effort ?? rec.effort)} min`;
+    if (kind === 'delegate') {
       const mate = delegateTarget(state, rec);
       const busy = mate.load >= CONFIG.TEAMMATE_LOAD_LIMIT;
       return `${CONFIG.COST.delegate} min. ${mate.name} ${busy ? 'is already swamped' : `has ${mate.load} task${mate.load === 1 ? '' : 's'}`}`;
     }
-    if (action === 'reply') return rec.held ? 'You have already replied' : `${CONFIG.HOLD_COST} min. Tell them you are on it and ask for a little time`;
-    if (action === 'schedule') return `${CONFIG.COST.schedule} min. Deal with it later`;
+    if (kind === 'reply') return rec.held ? 'You have already replied' : `${CONFIG.HOLD_COST} min. Tell them you are on it and ask for a little time`;
+    if (kind === 'schedule') return `${CONFIG.COST.schedule} min. Deal with it later`;
     return `${CONFIG.COST.decline} min. Close it without acting`;
   }
 
@@ -64,10 +76,12 @@ export function createUi({ senders, teammates, onSelect, onAction, onWait, onEnd
     $('reader-role').textContent = sender.role;
     $('reader-subject').textContent = rec.def.subject;
     $('reader-body').textContent = rec.def.body;
-    $('reader-actions').innerHTML = ALL_ACTIONS.map((action, i) => `
-      <button type="button" class="action" data-action="${action}"${action === 'reply' && rec.held ? ' disabled' : ''}>
-        <span class="action-name"><kbd aria-hidden="true">${i + 1}</kbd>${LABEL[action]}</span>
-        <span class="action-note">${esc(actionNote(state, rec, action))}</span>
+    const options = optionsFor(rec);
+    $('reader-actions').classList.toggle('specific', rec.def.choices !== undefined);
+    $('reader-actions').innerHTML = options.map((option, i) => `
+      <button type="button" class="action${option.specific ? ' action-specific' : ''}" data-action="${option.id}"${option.kind === 'reply' && rec.held ? ' disabled' : ''}>
+        <span class="action-name"><kbd aria-hidden="true">${i + 1}</kbd>${esc(option.label)}</span>
+        <span class="action-note">${esc(actionNote(state, rec, option))}</span>
       </button>`).join('');
   }
 
@@ -149,9 +163,11 @@ export function createUi({ senders, teammates, onSelect, onAction, onWait, onEnd
   document.addEventListener('keydown', (e) => {
     if ($('play').hidden || $('guide').open || e.metaKey || e.ctrlKey || e.altKey) return;
     const i = ['1', '2', '3', '4', '5'].indexOf(e.key);
-    if (i >= 0 && selectedId) {
+    const rec = selectedId && lastState ? lastState.items[selectedId] : null;
+    const option = rec ? optionsFor(rec)[i] : null;
+    if (i >= 0 && option) {
       e.preventDefault();
-      if (!e.repeat && gate.allow()) onAction(selectedId, ALL_ACTIONS[i]);
+      if (!e.repeat && gate.allow()) onAction(selectedId, option.id);
     }
   });
 

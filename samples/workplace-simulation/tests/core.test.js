@@ -351,3 +351,100 @@ test('the day summary counts escalations that actually arrived', () => {
   const clean = finishDay(day([item({ id: 'z' })]));
   assert.equal(clean.escalations, 0);
 });
+
+// ---- specific responses (choices) ----
+function choiceItem(over = {}) {
+  return item({
+    id: 'k', impact: 4, deadlineIn: 120, delegable: true, delegateTo: 't1', effort: 20,
+    why: 'Because it matters.',
+    choices: [
+      { id: 'a', kind: 'do_now', credit: 1, label: 'Do the strong thing.', text: 'It worked.' },
+      { id: 'b', kind: 'delegate', credit: 0.6, label: 'Hand it off.', text: 'It mostly worked.' },
+      { id: 'c', kind: 'schedule', credit: 0.3, trap: 'avoidance', label: 'Put it off.', text: 'It slipped.' },
+      { id: 'd', kind: 'decline', credit: 0, label: 'Ignore it.', text: 'It got worse.' },
+    ],
+    ...over,
+  });
+}
+
+test('choosing a response applies its credit, text, and the cost of its kind', () => {
+  const s = day([choiceItem()]);
+  const r = act(s, 'k', 'a');
+  assert.equal(r.credit, 1);
+  assert.equal(r.text, 'It worked.');
+  assert.equal(r.action, 'do_now');
+  assert.equal(r.delta, (1 - 0.5) * 2 * 4 * CONFIG.K);
+  assert.equal(s.clock, 20);
+  assert.equal(s.items.k.status, 'resolved');
+});
+
+test('the decision records which response was chosen, its label and text', () => {
+  const s = day([choiceItem()]);
+  act(s, 'k', 'c');
+  const d = s.decisions[0];
+  assert.equal(d.choiceId, 'c');
+  assert.equal(d.choiceLabel, 'Put it off.');
+  assert.equal(d.text, 'It slipped.');
+  assert.equal(d.action, 'schedule');
+  assert.equal(s.items.k.status, 'scheduled');
+});
+
+test('a delegating response uses teammate load, and an overloaded teammate halves its credit', () => {
+  const s = day([choiceItem({ id: 'k1' }), choiceItem({ id: 'k2' }), choiceItem({ id: 'k3' })]);
+  assert.equal(act(s, 'k1', 'b').credit, 0.6);
+  assert.equal(act(s, 'k2', 'b').credit, 0.6);
+  assert.equal(act(s, 'k3', 'b').credit, 0.3);
+  assert.equal(s.teammates.t1.load, 3);
+});
+
+test('a response that declines an escalating message queues the follow-up', () => {
+  const fu = item({ id: 'f1', impact: 4, deadlineIn: 60 });
+  const s = day([choiceItem({ tags: ['escalates'], escalatesTo: 'f1' })], { f1: fu });
+  act(s, 'k', 'd');
+  assert.equal(s.items.f1.status, 'queued');
+});
+
+test('an unanswered message with responses still expires and escalates', () => {
+  const fu = item({ id: 'f1', impact: 4, deadlineIn: 60 });
+  const s = day([choiceItem({ deadlineIn: 30, tags: ['escalates'], escalatesTo: 'f1' })], { f1: fu });
+  tick(s, 30);
+  assert.equal(s.items.k.status, 'expired');
+  assert.equal(s.decisions[0].action, 'none');
+  assert.equal(s.items.f1.status, 'queued');
+});
+
+test('a message with responses rejects generic actions, the holding reply, and unknown response ids', () => {
+  const s = day([choiceItem()]);
+  assert.throws(() => act(s, 'k', 'do_now'));
+  assert.throws(() => act(s, 'k', 'reply'));
+  assert.throws(() => act(s, 'k', 'z'));
+  assert.equal(s.decisions.length, 0);
+  assert.equal(s.clock, 0);
+});
+
+test('a plain message still takes generic actions, and rejects response ids', () => {
+  const s = day([item({ id: 'p' })]);
+  assert.throws(() => act(s, 'p', 'a'));
+  assert.equal(act(s, 'p', 'decline').action, 'decline');
+});
+
+test('a response can override the effort of a do_now', () => {
+  const s = day([choiceItem({ effort: 20, choices: [
+    { id: 'a', kind: 'do_now', credit: 1, effort: 50, label: 'Take the long way.', text: 'It took a while.' },
+    { id: 'b', kind: 'decline', credit: 0, label: 'Skip it.', text: 'Skipped.' },
+  ] })]);
+  act(s, 'k', 'a');
+  assert.equal(s.clock, 50);
+});
+
+test('a response that hands the task to someone outside the team does not load a teammate', () => {
+  const s = day([choiceItem({ choices: [
+    { id: 'a', kind: 'delegate', external: true, credit: 0.6, label: 'Ask the client contact to sort it out.', text: 'They sorted it.' },
+    { id: 'b', kind: 'do_now', credit: 1, label: 'Do it yourself.', text: 'Done.' },
+  ] })]);
+  const r = act(s, 'k', 'a');
+  assert.equal(r.credit, 0.6);
+  assert.equal(r.teammate, null);
+  assert.equal(s.teammates.t1.load, 0);
+  assert.equal(s.teammates.t2.load, 0);
+});

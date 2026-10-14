@@ -80,9 +80,13 @@ export function generateDay(pool, { seed = 1, focusTag = null, referenceImpact =
     if (referenceImpact == null || (sum >= referenceImpact * 0.9 && sum <= referenceImpact * 1.1)) break;
   }
   const ordered = shuffle(rng, best.chosen);
+  // A separate generator reorders responses, so the rest of the day does not change.
+  const choiceRng = mulberry32(seed * 104729 + 3);
   const items = ordered.map((item, i) => {
     const slot = i < 2 ? 0 : (i - 1) * ARRIVAL_SPACING + Math.floor(rng() * ARRIVAL_JITTER);
-    return { ...item, arrivesAt: slot };
+    const out = { ...item, arrivesAt: slot };
+    if (item.choices) out.choices = shuffle(choiceRng, item.choices);
+    return out;
   });
   const followUps = {};
   for (const item of items) if (item.escalatesTo) followUps[item.escalatesTo] = pool.followUps[item.escalatesTo];

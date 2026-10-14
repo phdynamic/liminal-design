@@ -56,3 +56,53 @@ test('commitmentCheck compares the chosen habit with last time', () => {
   assert.match(commitmentCheck(last, { rank: 40, quick: 100 }), /slipped|lower/i);
   assert.ok(commitmentCheck(last, { rank: 100 }).includes('Rank bias'));
 });
+
+import { keyDecisions } from '../js/debrief.js';
+
+const kdItem = (id, trapKey) => ({
+  id, impact: 4, tags: [],
+  def: {
+    subject: `Subject ${id}`, why: 'Because it matters.',
+    choices: [
+      { id: 'a', kind: 'do_now', credit: 1, label: 'The strong move.', text: 'Strong result.' },
+      { id: 'b', kind: 'decline', credit: 0.1, trap: trapKey, label: 'The tempting move.', text: 'Weak result.' },
+    ],
+  },
+});
+
+test('keyDecisions lists decisions on messages with specific responses, in order, with the strongest response', () => {
+  const summary = {
+    items: { k1: kdItem('k1', 'rank'), k2: kdItem('k2', 'avoidance'), p: { id: 'p', impact: 2, tags: [], def: { subject: 'Plain' } } },
+    decisions: [
+      { id: 'k1', action: 'decline', credit: 0.1, choiceId: 'b', choiceLabel: 'The tempting move.', text: 'Weak result.', minute: 10 },
+      { id: 'p', action: 'do_now', credit: 1, minute: 20 },
+      { id: 'k2', action: 'do_now', credit: 1, choiceId: 'a', choiceLabel: 'The strong move.', text: 'Strong result.', minute: 30 },
+    ],
+  };
+  const rows = keyDecisions(summary);
+  assert.equal(rows.length, 2);
+  assert.deepEqual(rows.map((r) => r.subject), ['Subject k1', 'Subject k2']);
+  assert.equal(rows[0].chosen, 'The tempting move.');
+  assert.equal(rows[0].strongest, 'The strong move.');
+  assert.equal(rows[0].result, 'weak');
+  assert.equal(rows[0].habit, 'Rank bias');
+  assert.equal(rows[1].result, 'strong');
+  assert.equal(rows[1].habit, null);
+  assert.equal(rows[0].why, 'Because it matters.');
+});
+
+test('keyDecisions reports a message nobody answered in time', () => {
+  const summary = {
+    items: { k1: kdItem('k1', 'rank') },
+    decisions: [{ id: 'k1', action: 'none', credit: 0, minute: 90 }],
+  };
+  const [row] = keyDecisions(summary);
+  assert.match(row.chosen, /no response/i);
+  assert.match(row.text, /nobody|no one/i);
+  assert.equal(row.result, 'weak');
+  assert.equal(row.strongest, 'The strong move.');
+});
+
+test('keyDecisions is empty when no message had specific responses', () => {
+  assert.deepEqual(keyDecisions({ items: { p: { id: 'p', def: { subject: 'x' } } }, decisions: [{ id: 'p', action: 'do_now', credit: 1 }] }), []);
+});
