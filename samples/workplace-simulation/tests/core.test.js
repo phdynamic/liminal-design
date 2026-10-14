@@ -173,3 +173,74 @@ test('an item arriving exactly at 480 is handled at the boundary', () => {
   assert.equal(s.clock, CONFIG.DAY_MINUTES);
   assert.ok(summary.meter >= 0 && summary.meter <= 100);
 });
+
+// ---- break pacing and crisis rules ----
+import { waitUntilNext, crisisActive } from '../js/engine.js';
+
+test('a break jumps to the next arrival instead of a fixed 15 minutes', () => {
+  const s = day([item({ id: 'a', arrivesAt: 0 }), item({ id: 'b', arrivesAt: 20 })]);
+  act(s, 'a', 'decline');
+  assert.equal(s.clock, 1);
+  waitUntilNext(s);
+  assert.equal(s.clock, 20);
+  assert.deepEqual(openItems(s).map((r) => r.id), ['b']);
+});
+
+test('a break never lasts longer than the cap', () => {
+  const s = day([item({ id: 'a', arrivesAt: 0 }), item({ id: 'b', arrivesAt: 200 })]);
+  act(s, 'a', 'decline');
+  waitUntilNext(s);
+  assert.equal(s.clock, 1 + CONFIG.BREAK_CAP);
+  assert.equal(openItems(s).length, 0);
+});
+
+test('a break with nothing left to arrive carries on to the end of the day', () => {
+  const s = day([item({ id: 'a', arrivesAt: 0, effort: 40 })]);
+  act(s, 'a', 'do_now');
+  waitUntilNext(s);
+  assert.equal(s.clock, CONFIG.DAY_MINUTES);
+});
+
+test('a break refills focus in proportion to the rest', () => {
+  const s = day([item({ id: 'a', arrivesAt: 0, effort: 40 }), item({ id: 'b', arrivesAt: 500 - 60 })]);
+  act(s, 'a', 'do_now');
+  const used = s.focusUsed;
+  waitUntilNext(s);
+  assert.equal(s.focusUsed, Math.max(0, used - CONFIG.BREAK_CAP));
+});
+
+test('a break always moves time forward by at least a minute', () => {
+  const s = day([item({ id: 'a', arrivesAt: 0 }), item({ id: 'b', arrivesAt: 1 })]);
+  act(s, 'a', 'decline');
+  const before = s.clock;
+  waitUntilNext(s);
+  assert.ok(s.clock > before || openItems(s).length > 0);
+});
+
+test('a break taken while a crisis message is open costs team impact', () => {
+  const crisis = item({ id: 'c1', tags: ['crisis'], impact: 5, deadlineIn: 200 });
+  const later = item({ id: 'later', arrivesAt: 300 });
+  const s = startDay({ items: [crisis, later], followUps: {}, teammates: TEAM, crisis: { id: 'x', startsAt: 0 } });
+  assert.equal(crisisActive(s), true);
+  const before = s.meter;
+  waitUntilNext(s);
+  assert.equal(s.meter, before - CONFIG.CRISIS_BREAK_PENALTY);
+});
+
+test('a break outside a crisis costs nothing', () => {
+  const s = day([item({ id: 'a', arrivesAt: 0 })]);
+  const before = s.meter;
+  assert.equal(crisisActive(s), false);
+  waitUntilNext(s);
+  assert.equal(s.meter, before);
+});
+
+test('crisisActive is false before the crisis starts and after its messages are handled', () => {
+  const crisis = item({ id: 'c1', arrivesAt: 100, tags: ['crisis'], impact: 5, deadlineIn: 200 });
+  const s = startDay({ items: [crisis], followUps: {}, teammates: TEAM, crisis: { id: 'x', startsAt: 100 } });
+  assert.equal(crisisActive(s), false);
+  tick(s, 100);
+  assert.equal(crisisActive(s), true);
+  act(s, 'c1', 'do_now');
+  assert.equal(crisisActive(s), false);
+});

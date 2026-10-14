@@ -1,4 +1,4 @@
-import { startDay, act, wait, finishDay, openItems, creditFor, ACTIONS, CONFIG } from '../js/engine.js';
+import { startDay, act, waitUntilNext, finishDay, openItems, creditFor, ACTIONS, CONFIG } from '../js/engine.js';
 import { SENDERS } from '../js/data/items.js';
 
 export function play(dayDef, choose) {
@@ -8,7 +8,7 @@ export function play(dayDef, choose) {
     const open = openItems(state);
     const pick = open.length ? choose(state, open) : null;
     if (pick) act(state, pick.id, pick.action);
-    else wait(state);
+    else waitUntilNext(state);
   }
   return finishDay(state);
 }

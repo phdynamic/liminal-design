@@ -1,4 +1,4 @@
-export const DAY_SIZE = 14;
+export const DAY_SIZE = 16;
 export const FOCUS_TAG_FOR = {
   rank: 'rank-pressure',
   quick: 'quick-win',
@@ -9,6 +9,9 @@ export const FOCUS_TAG_FOR = {
 
 const REQUIRED = [['hidden-critical', 3], ['escalates', 2], ['rank-pressure', 2]];
 const MAX_TRIES = 300;
+const CRISIS_WINDOW = [150, 330];
+const ARRIVAL_SPACING = 28;
+const ARRIVAL_JITTER = 3;
 
 export function mulberry32(seed) {
   let a = seed >>> 0;
@@ -57,7 +60,16 @@ function shuffle(rng, list) {
   return out;
 }
 
-export function generateDay(pool, { seed = 1, focusTag = null, referenceImpact = null } = {}) {
+function pickCrisis(pool, crisisSeed) {
+  if (!pool.crises || !pool.crises.length) return null;
+  const rng = mulberry32(crisisSeed);
+  const def = pool.crises[Math.floor(rng() * pool.crises.length)];
+  const startsAt = CRISIS_WINDOW[0] + Math.floor(rng() * (CRISIS_WINDOW[1] - CRISIS_WINDOW[0] + 1));
+  const items = def.items.map(({ offset, ...item }) => ({ ...item, arrivesAt: startsAt + offset }));
+  return { items, summary: { id: def.id, title: def.title, caption: def.caption, startsAt } };
+}
+
+export function generateDay(pool, { seed = 1, focusTag = null, referenceImpact = null, crisisSeed = seed * 7919 + 17, withCrisis = true } = {}) {
   const rng = mulberry32(seed);
   let best = null;
   for (let tries = 0; tries < MAX_TRIES; tries++) {
@@ -69,10 +81,17 @@ export function generateDay(pool, { seed = 1, focusTag = null, referenceImpact =
   }
   const ordered = shuffle(rng, best.chosen);
   const items = ordered.map((item, i) => {
-    const slot = i < 2 ? 0 : (i - 1) * 32 + Math.floor(rng() * 12);
+    const slot = i < 2 ? 0 : (i - 1) * ARRIVAL_SPACING + Math.floor(rng() * ARRIVAL_JITTER);
     return { ...item, arrivesAt: slot };
   });
   const followUps = {};
   for (const item of items) if (item.escalatesTo) followUps[item.escalatesTo] = pool.followUps[item.escalatesTo];
-  return { items, followUps, teammates: pool.teammates, impactSum: best.sum };
+  const crisis = withCrisis ? pickCrisis(pool, crisisSeed) : null;
+  return {
+    items: crisis ? [...items, ...crisis.items] : items,
+    followUps,
+    teammates: pool.teammates,
+    impactSum: best.sum,
+    crisis: crisis ? crisis.summary : null,
+  };
 }

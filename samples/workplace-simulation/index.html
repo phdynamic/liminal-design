@@ -18,13 +18,30 @@
   <section id="intro" class="screen intro" aria-labelledby="intro-h">
     <a class="exit" href="../../index.html#work">Back to the portfolio</a>
     <h1 id="intro-h">Monday</h1>
-    <p class="lede">You have just been promoted to team lead. It is 9:00 on a Monday, and the messages are already arriving.</p>
-    <ul class="how">
-      <li>Open a message, then choose what to do with it: <strong>do it now</strong>, <strong>delegate</strong>, <strong>schedule</strong>, or <strong>decline</strong>.</li>
-      <li>Time passes only when you act. Everything you do uses minutes and focus.</li>
-      <li>Your <strong>team impact</strong> rises and falls with your choices. Some consequences arrive hours later.</li>
-      <li>At 5:00 pm you see how you did, what pattern showed up, and how you compare with your last attempt.</li>
-    </ul>
+    <div id="intro-story" class="story-text"></div>
+
+    <h2>Your goal</h2>
+    <p>Finish the day with your team's <strong>impact</strong> as high as you can. Impact is how much your decisions helped the team, weighted by how much each message mattered. A big, urgent message moves it a lot. A small one barely moves it. Some days something goes wrong, and you will not know when.</p>
+
+    <h2>What the numbers mean</h2>
+    <dl class="meanings">
+      <div><dt>Time</dt><dd>The clock runs from 9:00 am to 5:00 pm. It moves only when you act, and every action uses minutes.</dd></div>
+      <div><dt>Focus</dt><dd>Your mental energy. Doing a task yourself drains it. When it runs out, everything you do yourself takes half again as long. A break refills some.</dd></div>
+      <div><dt>Team impact</dt><dd>A score from 0 to 100, starting at 50. It rises when you handle things well and falls when you miss or mishandle them. Some consequences arrive hours later, so it can drop after a choice that looked fine.</dd></div>
+      <div><dt>Judgment index</dt><dd>At the end of the day, your final team impact becomes your judgment index. It is saved in this browser so you can see whether you improve from one attempt to the next.</dd></div>
+    </dl>
+
+    <h2>Your four moves</h2>
+    <dl class="meanings">
+      <div><dt>Do it now</dt><dd>You handle it yourself. It costs time and focus, and it is right for what only you can do.</dd></div>
+      <div><dt>Delegate</dt><dd>A teammate handles it. It is quick, but it only works for tasks they can do well, and a teammate who is already busy does worse.</dd></div>
+      <div><dt>Schedule</dt><dd>You put it off. That is fine for something that is not due today, and costly for something that is.</dd></div>
+      <div><dt>Decline</dt><dd>You close it without acting. That is right for noise, and costly for anything that mattered.</dd></div>
+    </dl>
+    <p>When your inbox is empty, <strong>take a break</strong>. It skips ahead to the next message and refills some focus.</p>
+
+    <h2>At 5:00</h2>
+    <p>You will see a priority matrix of your choices, your day in order, any habits that showed up, how you handled the crisis, and a note from Dana.</p>
     <p class="muted">Keyboard: arrow keys move through the inbox, and keys 1 to 4 choose an action. About 10 to 15 minutes. Nothing is graded.</p>
     <div id="intro-history"></div>
     <button id="start" class="btn btn-light" type="button">Start the day</button>
@@ -35,15 +52,20 @@
       <div class="hud-item"><span class="hud-label">Time</span><span id="clock-text" class="hud-value">9:00 am</span></div>
       <div class="hud-item"><span class="hud-label">Focus</span><span id="focus-text" class="hud-value">100%</span></div>
       <div class="hud-item"><span class="hud-label">Team impact</span><span class="hud-value"><span id="meter-text">50</span> <span id="meter-arrow" aria-hidden="true"></span></span></div>
+      <p id="crisis-badge" class="crisis-badge" hidden>Crisis in progress</p>
       <button id="end-day" class="btn btn-line" type="button">End the day</button>
     </div>
-    <div id="scene" class="scene"></div>
+    <div class="scene-wrap">
+      <div id="scene" class="scene"></div>
+      <div id="bubbles" class="bubbles" aria-hidden="true"></div>
+    </div>
+    <ul id="captions" class="captions" aria-label="The story so far"></ul>
     <div class="work">
       <section class="inbox" aria-labelledby="inbox-h">
         <h2 id="inbox-h">Inbox <span id="inbox-count" class="muted"></span></h2>
         <ul id="inbox" class="cards" role="listbox" aria-label="Inbox messages" tabindex="0"></ul>
-        <p id="inbox-empty" class="muted" hidden>Nothing is waiting. Take a break, or end the day.</p>
-        <button id="wait" class="btn btn-line" type="button">Take a break (15 min)</button>
+        <p id="inbox-empty" class="muted" hidden>Nothing is waiting. Take a break to skip ahead to the next message, or end the day.</p>
+        <button id="wait" class="btn btn-line" type="button">Take a break</button>
       </section>
       <section class="reader" aria-labelledby="reader-h">
         <h2 id="reader-h" class="sr-only">Selected message</h2>
@@ -59,7 +81,6 @@
         </article>
       </section>
     </div>
-    <div id="bubbles" class="bubbles" aria-hidden="true"></div>
   </section>
 
   <section id="debrief" class="screen debrief" hidden aria-labelledby="debrief-h"></section>

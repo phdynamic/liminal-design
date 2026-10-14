@@ -20,6 +20,22 @@ export function trendOf(current, previous) {
   return { arrow: '–', text: 'unchanged since your last attempt' };
 }
 
+export function crisisReview(summary, crisis) {
+  if (!crisis) return null;
+  const rows = summary.decisions
+    .map((d) => ({ d, rec: summary.items[d.id] }))
+    .filter((r) => r.rec && r.rec.tags.includes('crisis'));
+  if (!rows.length) return null;
+  const score = Math.round(100 * rows.reduce((s, r) => s + r.d.credit, 0) / rows.length);
+  const handled = rows.filter((r) => r.d.action !== 'none').length;
+  const text = score >= 70
+    ? 'You triaged the crisis well: the urgent items got the right response, and the rest did not pull you off course.'
+    : score >= 40
+      ? 'The crisis was mixed. Some of it was handled well, but at least one important message got less than it needed.'
+      : 'The crisis got away from you. With four things at once, the order matters: start with what only you can do.';
+  return { title: crisis.title, score, handled, missed: rows.length - handled, delta: rows.reduce((s, r) => s + r.d.delta, 0), text };
+}
+
 export function sparkline(values) {
   if (values.length < 2) return '';
   const W = 240, H = 60, P = 6;
@@ -86,6 +102,25 @@ function callouts(tendencies, summary) {
   }).join('');
 }
 
+function storyPanel(data) {
+  if (!data.epilogue) return '';
+  return `<div class="panel story"><h2>Dana's note</h2><p>${esc(data.epilogue.text)}</p>${data.epilogue.note ? `<p>${esc(data.epilogue.note)}</p>` : ''}</div>`;
+}
+
+function crisisPanel(data) {
+  const review = data.crisis;
+  if (!review) return '';
+  const last = [...data.previous].reverse().find((a) => a.crisis && typeof a.crisis.score === 'number');
+  const tr = trendOf(review.score, last?.crisis?.score);
+  const sign = review.delta >= 0 ? '+' : '−';
+  return `<div class="panel"><h2>How you handled the crisis</h2>
+    <p><strong>${esc(review.title)}</strong></p>
+    <p class="big" aria-label="Crisis score ${review.score} out of 100">${review.score}</p>
+    <p class="trend">${tr.arrow} ${esc(tr.text)}</p>
+    <p>${esc(review.text)}</p>
+    <p class="muted">You handled ${review.handled} of ${review.handled + review.missed} crisis messages. Team impact from the crisis: ${sign}${Math.abs(Math.round(review.delta * 10) / 10)}.</p></div>`;
+}
+
 function indexPanel(data) {
   const { attempt, previous, tendencies } = data;
   const last = previous[previous.length - 1];
@@ -110,7 +145,8 @@ export function renderDebrief(root, data) {
   root.innerHTML = `
     <h1 id="debrief-h" style="font-size:clamp(2.5rem,7vw,4rem)">The day is over</h1>
     <p class="lede muted" style="margin-top:.75rem">Your team impact finished at <strong>${summary.meter}</strong> out of 100. Here is what your choices looked like.</p>
-    <div class="grid" style="margin-top:1.5rem">
+    <div style="margin-top:1.5rem">${storyPanel(data)}</div>
+    <div class="grid" style="margin-top:1rem">
       <div>
         <div class="panel"><h2>Priority matrix</h2>${matrix(summary)}
           <p class="legend"><span>Circle: did it now</span><span>Square: delegated</span><span>Triangle: scheduled</span><span>Diamond: declined</span><span>Cross: not handled</span></p>
@@ -119,6 +155,7 @@ export function renderDebrief(root, data) {
       </div>
       <div>
         ${indexPanel(data)}
+        ${crisisPanel(data)}
         <div class="panel"><h2>What showed up</h2>${callouts(data.tendencies, summary)}</div>
       </div>
     </div>

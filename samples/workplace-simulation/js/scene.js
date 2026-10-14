@@ -61,6 +61,7 @@ const MARKUP = `
     <rect id="cup-fill" x="0" y="2" width="44" height="40" fill="#8a5a3c" clip-path="url(#cup-clip)"/>
     <path d="M44 10 q14 0 14 12 t-14 12" fill="none" stroke="#ece8f4" stroke-width="3"/>
   </g>
+  <rect id="crisis-tint" x="-800" width="2560" height="320" fill="#ff8a3d" opacity="0" pointer-events="none"/>
 </svg>`;
 
 export function createScene(root) {
@@ -68,7 +69,7 @@ export function createScene(root) {
   const $ = (id) => root.querySelector(`#${id}`);
   const els = {
     skyTop: $('sky-top'), skyBottom: $('sky-bottom'), handH: $('hand-h'), handM: $('hand-m'),
-    cup: $('cup-fill'), needle: $('needle'), fill: $('gauge-fill'), num: $('gauge-num'), delta: $('gauge-delta'),
+    tint: $('crisis-tint'), cup: $('cup-fill'), needle: $('needle'), fill: $('gauge-fill'), num: $('gauge-num'), delta: $('gauge-delta'),
   };
   let deltaTimer = null;
 
@@ -80,6 +81,9 @@ export function createScene(root) {
       const hours = 9 + minute / 60;
       els.handH.setAttribute('transform', `rotate(${(hours % 12) * 30})`);
       els.handM.setAttribute('transform', `rotate(${(minute % 60) * 6})`);
+    },
+    setCrisis(on) {
+      els.tint.setAttribute('opacity', on ? '0.2' : '0');
     },
     setFocus(fraction) {
       const f = Math.max(0, Math.min(1, fraction));

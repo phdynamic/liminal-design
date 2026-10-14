@@ -4,11 +4,13 @@ export const CONFIG = {
   DAY_MINUTES: 480,
   START_METER: 50,
   K: 1,
-  EFFORT_SCALE: 2.7,
+  EFFORT_SCALE: 1.7,
   FOCUS_CAPACITY: 300,
   FATIGUE_MULT: 1.5,
   COST: { delegate: 5, schedule: 2, decline: 1 },
   WAIT_MINUTES: 15,
+  BREAK_CAP: 30,
+  CRISIS_BREAK_PENALTY: 2,
   TEAMMATE_LOAD_LIMIT: 2,
   EXPIRY_PENALTY_PER_IMPACT: 1.5,
   ESCALATION_PENALTY: 3,
@@ -76,7 +78,7 @@ export function startDay(dayDef) {
     clock: 0, meter: CONFIG.START_METER, focusUsed: 0, ended: false,
     items, followUps: dayDef.followUps ?? {},
     teammates: Object.fromEntries(dayDef.teammates.map((t) => [t.id, { ...t, load: 0 }])),
-    decisions: [], events: [],
+    decisions: [], events: [], crisis: dayDef.crisis ?? null,
   };
   tick(state, 0);
   return state;
@@ -226,6 +228,30 @@ export function wait(state, minutes = CONFIG.WAIT_MINUTES) {
   state.focusUsed = Math.max(0, state.focusUsed - minutes);
   tick(state, state.clock + minutes);
   return { events: state.events.slice(eventsFrom) };
+}
+
+export function crisisActive(state) {
+  if (!state.crisis || state.clock < state.crisis.startsAt) return false;
+  return Object.values(state.items).some((r) => r.status === 'open' && r.tags.includes('crisis'));
+}
+
+// A break that jumps to the next arrival (never more than `cap` minutes), so one break always brings something.
+// With nothing left to arrive, the rest of the day passes quietly.
+export function waitUntilNext(state, cap = CONFIG.BREAK_CAP) {
+  if (state.ended) throw new Error('The day has ended.');
+  const upcoming = Object.values(state.items)
+    .filter((r) => r.status === 'queued' && r.arrivesAt > state.clock)
+    .map((r) => r.arrivesAt);
+  const minutes = upcoming.length
+    ? Math.max(1, Math.min(cap, Math.min(...upcoming) - state.clock))
+    : CONFIG.DAY_MINUTES - state.clock;
+  const penalized = crisisActive(state);
+  const result = wait(state, minutes);
+  if (penalized) {
+    adjustMeter(state, -CONFIG.CRISIS_BREAK_PENALTY);
+    pushEvent(state, 'crisis-break', null, { delta: -CONFIG.CRISIS_BREAK_PENALTY });
+  }
+  return { ...result, minutes, penalized };
 }
 
 function summarize(state) {

@@ -2,8 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generateDay, mulberry32, DAY_SIZE, FOCUS_TAG_FOR } from '../js/engine.js';
 import { POOL } from '../js/data/items.js';
+import { CRISES } from '../js/data/crises.js';
 
-const count = (day, tag) => day.items.filter((i) => i.tags.includes(tag)).length;
+const isBase = (i) => !i.tags.includes('crisis');
+const baseOf = (day) => day.items.filter(isBase);
+
+const count = (day, tag) => baseOf(day).filter((i) => i.tags.includes(tag)).length;
 
 test('mulberry32 is deterministic and in [0,1)', () => {
   const a = mulberry32(5), b = mulberry32(5);
@@ -23,25 +27,25 @@ test('the same seed gives the same day', () => {
 test('every generated day satisfies the constraints', () => {
   for (let seed = 1; seed <= 60; seed++) {
     const day = generateDay(POOL, { seed });
-    assert.equal(day.items.length, DAY_SIZE);
-    assert.equal(new Set(day.items.map((i) => i.id)).size, DAY_SIZE);
+    assert.equal(baseOf(day).length, DAY_SIZE);
+    assert.equal(new Set(day.items.map((i) => i.id)).size, day.items.length);
     assert.ok(count(day, 'hidden-critical') >= 3, `seed ${seed} hidden-critical`);
     assert.ok(count(day, 'escalates') >= 2, `seed ${seed} escalates`);
     assert.ok(count(day, 'rank-pressure') >= 2, `seed ${seed} rank-pressure`);
     assert.ok(day.items.every((i) => i.arrivesAt >= 0 && i.arrivesAt < 420), `seed ${seed} arrivals`);
-    assert.equal(day.items.filter((i) => i.arrivesAt === 0).length >= 2, true);
+    assert.equal(baseOf(day).filter((i) => i.arrivesAt === 0).length >= 2, true);
   }
 });
 
 test('follow-ups match the escalating items chosen', () => {
   const day = generateDay(POOL, { seed: 3 });
-  const wanted = day.items.map((i) => i.escalatesTo).filter(Boolean).sort();
+  const wanted = baseOf(day).map((i) => i.escalatesTo).filter(Boolean).sort();
   assert.deepEqual(Object.keys(day.followUps).sort(), wanted);
 });
 
 test('with no focus tag the generator still returns a valid day', () => {
   const day = generateDay(POOL, { seed: 11, focusTag: null });
-  assert.equal(day.items.length, DAY_SIZE);
+  assert.equal(baseOf(day).length, DAY_SIZE);
 });
 
 test('a focus tag raises how often that tag appears', () => {
@@ -61,4 +65,61 @@ test('a reference impact keeps replays within 10 percent for most seeds', () => 
     if (sum >= reference * 0.9 && sum <= reference * 1.1) inBand++;
   }
   assert.ok(inBand >= 36, `only ${inBand}/40 in band`);
+});
+
+test('every day contains exactly one crisis: four tagged messages arriving in a burst', () => {
+  for (let seed = 1; seed <= 30; seed++) {
+    const day = generateDay(POOL, { seed });
+    const crisisItems = day.items.filter((i) => i.tags.includes('crisis'));
+    assert.equal(crisisItems.length, 4, `seed ${seed}`);
+    assert.ok(day.crisis && day.crisis.id && day.crisis.caption, `seed ${seed} crisis summary`);
+    const arrivals = crisisItems.map((i) => i.arrivesAt);
+    assert.equal(Math.min(...arrivals), day.crisis.startsAt);
+    assert.ok(Math.max(...arrivals) - day.crisis.startsAt <= 12);
+  }
+});
+
+test('the crisis starts in the late-morning to mid-afternoon window', () => {
+  for (let seed = 1; seed <= 80; seed++) {
+    const { crisis } = generateDay(POOL, { seed });
+    assert.ok(crisis.startsAt >= 150 && crisis.startsAt <= 330, `seed ${seed}: ${crisis.startsAt}`);
+  }
+});
+
+test('crisis type and time vary across seeds and cover every crisis', () => {
+  const ids = new Set(), times = new Set();
+  for (let seed = 1; seed <= 80; seed++) {
+    const { crisis } = generateDay(POOL, { seed });
+    ids.add(crisis.id);
+    times.add(crisis.startsAt);
+  }
+  assert.equal(ids.size, CRISES.length);
+  assert.ok(times.size >= 20);
+});
+
+test('a separate crisisSeed changes the crisis without changing the rest of the day', () => {
+  const a = generateDay(POOL, { seed: 5, crisisSeed: 1 });
+  const b = generateDay(POOL, { seed: 5, crisisSeed: 2 });
+  assert.deepEqual(baseOf(a).map((i) => [i.id, i.arrivesAt]), baseOf(b).map((i) => [i.id, i.arrivesAt]));
+  const sig = (d) => `${d.crisis.id}@${d.crisis.startsAt}`;
+  const seen = new Set();
+  for (let cs = 1; cs <= 12; cs++) seen.add(sig(generateDay(POOL, { seed: 5, crisisSeed: cs })));
+  assert.ok(seen.size > 3);
+});
+
+test('the crisis can be switched off', () => {
+  const day = generateDay(POOL, { seed: 5, withCrisis: false });
+  assert.equal(day.crisis, null);
+  assert.equal(day.items.length, DAY_SIZE);
+});
+
+test('base arrivals are spaced so the inbox is rarely empty', () => {
+  for (let seed = 1; seed <= 30; seed++) {
+    const arrivals = baseOf(generateDay(POOL, { seed })).map((i) => i.arrivesAt).sort((a, b) => a - b);
+    for (let i = 1; i < arrivals.length; i++) assert.ok(arrivals[i] - arrivals[i - 1] <= 30, `seed ${seed} gap`);
+  }
+});
+
+test('a day has sixteen base messages', () => {
+  assert.equal(DAY_SIZE, 16);
 });

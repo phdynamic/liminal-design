@@ -1,3 +1,5 @@
+import { CRISES } from './crises.js';
+
 export const SENDERS = {
   dana:   { id: 'dana',   name: 'Dana Whitfield', role: 'VP of Operations',         rank: 3, skin: '#d9a47a', hair: '#3b2a24', hairStyle: 'short', shirt: '#5b4b8a' },
   marcus: { id: 'marcus', name: 'Marcus Lee',     role: 'Client, Brightline Retail', rank: 2, skin: '#8d5a3b', hair: '#17171f', hairStyle: 'short', shirt: '#2f6f73' },
@@ -161,4 +163,4 @@ export const FOLLOW_UPS = {
     deadlineIn: 90, impact: 4, effort: 30, tags: ['follow-up'], delegable: false },
 };
 
-export const POOL = { items: ITEMS, followUps: FOLLOW_UPS, teammates: TEAMMATES };
+export const POOL = { items: ITEMS, followUps: FOLLOW_UPS, teammates: TEAMMATES, crises: CRISES };

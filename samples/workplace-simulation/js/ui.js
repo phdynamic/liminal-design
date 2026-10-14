@@ -115,8 +115,8 @@ export function createUi({ senders, teammates, onSelect, onAction, onWait, onEnd
     el.className = `bubble mood-${mood}`;
     el.textContent = text;
     $('bubbles').appendChild(el);
-    while ($('bubbles').children.length > 3) $('bubbles').firstChild.remove();
-    setTimeout(() => el.remove(), 5500);
+    while ($('bubbles').children.length > 2) $('bubbles').firstChild.remove();
+    setTimeout(() => el.remove(), 4500);
   }
 
   function announce(text) {
@@ -156,5 +156,22 @@ export function createUi({ senders, teammates, onSelect, onAction, onWait, onEnd
   $('wait').addEventListener('click', () => onWait());
   $('end-day').addEventListener('click', () => onEnd());
 
-  return { renderInbox, updateHud, showBubble, announce, getSelectedId: () => selectedId, resetKnown: () => known.clear() };
+  function showCaption(text, kind = 'story') {
+    const list = $('captions');
+    const li = document.createElement('li');
+    li.className = `caption caption-${kind}`;
+    li.textContent = text;
+    list.prepend(li);
+    while (list.children.length > 3) list.lastChild.remove();
+  }
+
+  function clearCaptions() {
+    $('captions').innerHTML = '';
+  }
+
+  function setCrisisBadge(on) {
+    $('crisis-badge').hidden = !on;
+  }
+
+  return { renderInbox, updateHud, showBubble, announce, showCaption, clearCaptions, setCrisisBadge, getSelectedId: () => selectedId, resetKnown: () => known.clear() };
 }
